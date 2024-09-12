@@ -242,7 +242,7 @@ metadata:
   name: docker-test
 spec:
   replicas: 3
-  version: v1.27.2+k0s.0
+  version: v1.30.4+k0s.0
   k0sConfigSpec:
     k0s:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -282,7 +282,7 @@ metadata:
   name:  docker-test-worker-0
   namespace: default
 spec:
-  version: v1.27.1
+  version: v1.30.4
   clusterName: docker-test-cluster
   bootstrap:
     configRef:
@@ -301,7 +301,7 @@ metadata:
   namespace: default
 spec:
   # version is deliberately different to be able to verify we actually pick it up :)
-  version: v1.27.1+k0s.0
+  version: v1.30.4+k0s.0
   args:
     - --labels=k0sproject.io/foo=bar
   preStartCommands:
@@ -330,6 +330,6 @@ metadata:
   name: test-file-secret
   namespace: default
 type: Opaque
-data:
+data: 
   value: dGVzdA==
 `

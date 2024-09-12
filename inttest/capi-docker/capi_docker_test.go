@@ -121,7 +121,7 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 	s.Require().NoError(util.WaitForNodeReadyStatus(s.ctx, kmcKC, "docker-test-0", corev1.ConditionTrue))
 	node, err := kmcKC.CoreV1().Nodes().Get(s.ctx, "docker-test-0", metav1.GetOptions{})
 	s.Require().NoError(err)
-	s.Require().Equal("v1.27.1+k0s", node.Status.NodeInfo.KubeletVersion)
+	s.Require().Equal("v1.30.3+k0s", node.Status.NodeInfo.KubeletVersion)
 	fooLabel, ok := node.Labels["k0sproject.io/foo"]
 	s.Require().True(ok)
 	s.Require().Equal("bar", fooLabel)
@@ -233,7 +233,7 @@ kind: K0smotronControlPlane
 metadata:
   name: docker-test-cp
 spec:
-  version: v1.27.2-k0s.0
+  version: v1.30.4-k0s.0
   certificateRefs:
     - name: docker-test-ca
       type: ca
@@ -274,7 +274,7 @@ metadata:
   name:  docker-test-0
   namespace: default
 spec:
-  version: v1.27.1
+  version: v1.30.4
   clusterName: docker-test
   bootstrap:
     configRef:
@@ -293,7 +293,7 @@ metadata:
   namespace: default
 spec:
   # version is deliberately different to be able to verify we actually pick it up :)
-  version: v1.27.1+k0s.0
+  version: v1.30.3+k0s.0
   args:
     - --labels=k0sproject.io/foo=bar
   preStartCommands:

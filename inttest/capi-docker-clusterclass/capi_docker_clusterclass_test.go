@@ -258,7 +258,7 @@ metadata:
 spec:
   topology:
     class: k0smotron-clusterclass
-    version: v1.27.2
+    version: v1.30.4
     workers:
       machineDeployments:
       - class: docker-test-default-worker
@@ -320,7 +320,7 @@ metadata:
 spec:
   template:
     spec:
-      version: v1.27.2+k0s.0
+      version: v1.30.4+k0s.0
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: ClusterClass
