@@ -32,7 +32,7 @@ func TestClusterSpec_GetImage(t *testing.T) {
 		{
 			name: "Nothing given",
 			spec: &ClusterSpec{},
-			want: "k0sproject/k0s:v1.27.9-k0s.0",
+			want: "k0sproject/k0s:v1.30.4-k0s.0",
 		},
 		{
 			name: "Only version given with suffix",
@@ -53,7 +53,7 @@ func TestClusterSpec_GetImage(t *testing.T) {
 			spec: &ClusterSpec{
 				Image: "foobar/k0s",
 			},
-			want: "foobar/k0s:v1.27.9-k0s.0",
+			want: "foobar/k0s:v1.30.4-k0s.0",
 		},
 		{
 			name: "Image and version given",

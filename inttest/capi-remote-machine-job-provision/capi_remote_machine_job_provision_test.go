@@ -273,7 +273,7 @@ metadata:
   name: remote-test
   namespace: default
 spec:
-  version: v1.27.2-k0s.0
+  version: v1.30.4-k0s.0
   persistence:
     type: emptyDir
   service:
@@ -309,7 +309,7 @@ metadata:
   name: remote-test-0
   namespace: default
 spec:
-  version: v1.27.2+k0s.0
+  version: v1.30.4+k0s.0
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
 kind: RemoteMachine

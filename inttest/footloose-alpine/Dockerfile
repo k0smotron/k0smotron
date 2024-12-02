@@ -33,4 +33,4 @@ RUN curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-re
 ENV KUBECONFIG=/var/lib/k0s/pki/admin.conf
 
 # Install latest k0s
-RUN curl -sSLf https://get.k0s.sh | K0S_VERSION=v1.27.2+k0s.0 sh
+RUN curl -sSLf https://get.k0s.sh | K0S_VERSION=v1.30.4+k0s.0 sh

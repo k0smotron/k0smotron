@@ -194,7 +194,7 @@ metadata:
   name: docker-test
 spec:
   replicas: 1
-  version: v1.27.2+k0s.0
+  version: v1.30.4+k0s.0
   k0sConfigSpec:
     k0s:
       apiVersion: k0s.k0sproject.io/v1beta1

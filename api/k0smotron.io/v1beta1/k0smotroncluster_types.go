@@ -115,7 +115,7 @@ type Mount struct {
 
 const (
 	defaultK0SImage   = "k0sproject/k0s"
-	defaultK0SVersion = "v1.27.9-k0s.0"
+	defaultK0SVersion = "v1.30.4-k0s.0"
 	defaultK0SSuffix  = "k0s.0"
 )
 
