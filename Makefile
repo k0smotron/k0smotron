@@ -13,6 +13,7 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 CRDOC ?= $(LOCALBIN)/crdoc
+HELMIFY ?= $(LOCALBIN)/helmify
 
 ## e2e configuration
 E2E_CONF_FILE ?= $(shell pwd)/e2e/config/docker.yaml
@@ -325,3 +326,13 @@ sign-pub-key:
 	  gcr.io/projectsigstore/cosign:v2.2.0 \
 	  public-key \
 	  --key /k0s/cosign.key --output-file /out/cosign.pub
+
+.PHONY: helmify
+helmify: $(HELMIFY) ## Download helmify locally if necessary.
+$(HELMIFY): $(LOCALBIN)
+	test -s $(LOCALBIN)/helmify || GOBIN=$(LOCALBIN) go install github.com/arttor/helmify/cmd/helmify@v0.4.17
+
+helm: manifests kustomize helmify
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default  | $(HELMIFY) -preserve-ns charts/k0smotron
+	git checkout config/manager/kustomization.yaml
