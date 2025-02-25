@@ -163,7 +163,7 @@ func (c *K0sController) Reconcile(ctx context.Context, req ctrl.Request) (res ct
 		}
 		log.Info("Status updated successfully")
 
-		if kcp.Status.ControlPlaneReady {
+		if kcp.Status.Ready {
 			if perr := c.Client.Patch(ctx, cluster, client.Merge); perr != nil {
 				err = fmt.Errorf("failed to patch cluster: %w", perr)
 			}

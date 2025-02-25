@@ -370,8 +370,6 @@ spec:
                   - type
                   type: object
                 type: array
-              controlPlaneReady:
-                type: boolean
               externalManagedControlPlane:
                 type: boolean
               initialized:
@@ -396,7 +394,6 @@ spec:
               version:
                 type: string
             required:
-            - controlPlaneReady
             - externalManagedControlPlane
             - initialized
             - ready

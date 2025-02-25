@@ -1947,13 +1947,6 @@ More info: http://kubernetes.io/docs/user-guide/labels<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>controlPlaneReady</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>externalManagedControlPlane</b></td>
         <td>boolean</td>
         <td>

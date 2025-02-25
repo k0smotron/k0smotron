@@ -128,7 +128,6 @@ type K0sControlPlaneList struct {
 type K0sControlPlaneStatus struct {
 	// Ready denotes that the control plane is ready
 	Ready                       bool   `json:"ready"`
-	ControlPlaneReady           bool   `json:"controlPlaneReady"`
 	Inititalized                bool   `json:"initialized"`
 	ExternalManagedControlPlane bool   `json:"externalManagedControlPlane"`
 	Replicas                    int32  `json:"replicas"`

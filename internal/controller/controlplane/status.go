@@ -188,7 +188,6 @@ func (c *K0sController) updateStatus(ctx context.Context, kcp *cpv1beta1.K0sCont
 	// Set the conditions
 	conditions.MarkTrue(kcp, cpv1beta1.ControlPlaneReadyCondition)
 	kcp.Status.Ready = true
-	kcp.Status.ControlPlaneReady = true
 	kcp.Status.Inititalized = true
 
 	// Set the k0s cluster ID annotation
