@@ -498,26 +498,28 @@ func (c *K0sController) reconcileMachines(ctx context.Context, cluster *clusterv
 }
 
 func (c *K0sController) runMachineDeletionSequence(ctx context.Context, logger logr.Logger, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0sControlPlane, machine *clusterv1.Machine) error {
-	kubeClient, err := c.getKubeClient(ctx, cluster)
-	if err != nil {
-		return fmt.Errorf("error getting cluster client set for deletion: %w", err)
-	}
-
-	waitCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
-	defer cancel()
-	err = wait.PollUntilContextCancel(waitCtx, 10*time.Second, true, func(fctx context.Context) (bool, error) {
-		if err := c.markChildControlNodeToLeave(fctx, machine.Name, kubeClient); err != nil {
-			return false, fmt.Errorf("error marking controlnode to leave: %w", err)
-		}
-
-		ok, err := c.checkMachineLeft(fctx, machine.Name, kubeClient)
+	if kcp.Status.Ready {
+		kubeClient, err := c.getKubeClient(ctx, cluster)
 		if err != nil {
-			logger.Error(err, "Error checking machine left", "machine", machine.Name)
+			return fmt.Errorf("error getting cluster client set for deletion: %w", err)
 		}
-		return ok, err
-	})
-	if err != nil {
-		return fmt.Errorf("error checking machine left: %w", err)
+
+		waitCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		defer cancel()
+		err = wait.PollUntilContextCancel(waitCtx, 10*time.Second, true, func(fctx context.Context) (bool, error) {
+			if err := c.markChildControlNodeToLeave(fctx, machine.Name, kubeClient); err != nil {
+				return false, fmt.Errorf("error marking controlnode to leave: %w", err)
+			}
+
+			ok, err := c.checkMachineLeft(fctx, machine.Name, kubeClient)
+			if err != nil {
+				logger.Error(err, "Error checking machine left", "machine", machine.Name)
+			}
+			return ok, err
+		})
+		if err != nil {
+			return fmt.Errorf("error checking machine left: %w", err)
+		}
 	}
 
 	if err := c.deleteBootstrapConfig(ctx, machine.Name, kcp); err != nil {
