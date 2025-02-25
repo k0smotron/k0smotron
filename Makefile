@@ -106,9 +106,8 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $(GO_TEST_DIRS) -coverprofile cover.out
 
-.PHONY: e2e
-e2e: ## Run the end-to-end tests
-	go test -v ./e2e -tags e2e \
+e2e: k0smotron-image-bundle.tar install.yaml
+	go test -v -tags e2e -run '$(TEST_NAME)' ./e2e  \
 	    -artifacts-folder="$(ARTIFACTS)" \
 	    -config="$(E2E_CONF_FILE)" \
 	    -skip-resource-cleanup=$(SKIP_RESOURCE_CLEANUP) \

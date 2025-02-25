@@ -171,31 +171,38 @@ jobs:
     uses: ./.github/workflows/capi-smoke-tests.yml
     with:
       smoke-suite: ${{ matrix.smoke-suite }}
-  e2e-migration:
-    name: E2E
-    needs: build
 
-    runs-on: ubuntu-latest
+  e2e:
+    name: E2E test
+    needs: build
+    runs-on: ubuntu-22.04-8core
+    strategy:
+      fail-fast: false
+      matrix:
+        e2e-suite:
+          - workload-cluster-inplace-upgrade
+          - workload-cluster-recreate-upgrade
 
     steps:
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version-file: go.mod
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
 
-    - name: Build e2e images
-      run: make docker-build
+      - name: Run e2e test
+        run: |
+          export TEST_NAME=Test$(echo "${{ matrix.e2e-suite }}" | awk -F'-' '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1' OFS='')
+          echo "Running E2E tests with TEST_NAME=$TEST_NAME"
+          make release
+          make e2e TEST_NAME="$TEST_NAME"
 
-    - name: Run e2e tests 
-      run: make e2e
-
-    - name: Archive artifacts
-      if: failure()
-      uses: actions/upload-artifact@v4.3.2
-      with:
-        name: e2e-artifacts
-        path: _artifacts
-        if-no-files-found: ignore
+      - name: Archive artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4.3.2
+        with:
+          name: e2e-artifacts
+          path: _artifacts
+          if-no-files-found: ignore

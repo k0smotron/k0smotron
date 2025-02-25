@@ -3,3 +3,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.14.0
 GO_VERSION ?= 1.22.6
 GOLANGCILINT_VERSION ?= 1.52.2
 CRDOC_VERSION ?= v0.6.2
+
+e2esuite := \
+    workload-cluster-inplace-upgrade \
+    workload-cluster-recreate-upgrade \

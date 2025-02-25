@@ -32,20 +32,23 @@ import (
 	capiutil "sigs.k8s.io/cluster-api/util"
 )
 
+func TestWorkloadClusterInplaceUpgrade(t *testing.T) {
+	setup(t, workloadClusterInplaceUpgradeSpec)
+}
+
 // Validation of the correct operation of k0smotron when the
 // K0sControlPlane object is updated. It simulates a typical user workflow that includes:
 //
 // 1. Creation of a workload cluster.
 //   - Ensures the cluster becomes operational.
 //
-// 2. Updating the control plane version.
+// 2. Updating the control plane version using Inplace upgrade strategy.
 //   - Verifies the cluster status aligns with the expected state after the update.
 //
-// 3. Performing a subsequent control plane version update.
+// 3. Performing a subsequent control plane version upgrade using Inplace upgrade strategy.
 //   - Confirms the cluster status is consistent and desired post-update.
-func TestWorkloadClusterUpgrade(t *testing.T) {
-
-	testName := "workload-upgrade"
+func workloadClusterInplaceUpgradeSpec(t *testing.T) {
+	testName := "workload-inplace-upgrade"
 
 	// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
 	namespace, _ := util.SetupSpecNamespace(ctx, testName, managementClusterProxy, artifactFolder)
@@ -66,8 +69,9 @@ func TestWorkloadClusterUpgrade(t *testing.T) {
 		InfrastructureProvider: "docker",
 		LogFolder:              filepath.Join(artifactFolder, "clusters", managementClusterProxy.GetName()),
 		ClusterctlVariables: map[string]string{
-			"CLUSTER_NAME": clusterName,
-			"NAMESPACE":    namespace.Name,
+			"CLUSTER_NAME":    clusterName,
+			"NAMESPACE":       namespace.Name,
+			"UPDATE_STRATEGY": "InPlace",
 		},
 	})
 	require.NotNil(t, workloadClusterTemplate)
@@ -101,6 +105,9 @@ func TestWorkloadClusterUpgrade(t *testing.T) {
 		Lister:  managementClusterProxy.GetClient(),
 		Cluster: cluster,
 	}, util.GetInterval(e2eConfig, testName, "wait-controllers"))
+	require.NoError(t, err)
+	// For Inplace upgrades we need to wait for the controlplane to have all the replicas ready before upgrading it again.
+	err = util.WaitForControlPlaneToBeReady(ctx, managementClusterProxy.GetClient(), controlPlane, util.GetInterval(e2eConfig, testName, "wait-kube-proxy-upgrade"))
 	require.NoError(t, err)
 
 	fmt.Println("Upgrading the Kubernetes control-plane version")

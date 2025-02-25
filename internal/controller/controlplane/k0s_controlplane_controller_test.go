@@ -32,6 +32,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1049,8 +1050,9 @@ func TestReconcileMachinesScaleDown(t *testing.T) {
 
 	kcpOwnerRef := *metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0sControlPlane"))
 
+	frt := &fakeRoundTripper{}
 	fakeClient := &restfake.RESTClient{
-		Client: restfake.CreateHTTPClient(roundTripperForWorkloadClusterAPI),
+		Client: restfake.CreateHTTPClient(frt.run),
 	}
 
 	restClient, _ := rest.RESTClientFor(&rest.Config{
@@ -1269,8 +1271,9 @@ func TestReconcileMachinesSyncOldMachines(t *testing.T) {
 
 	kcpOwnerRef := *metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0sControlPlane"))
 
+	frt := &fakeRoundTripper{}
 	fakeClient := &restfake.RESTClient{
-		Client: restfake.CreateHTTPClient(roundTripperForWorkloadClusterAPI),
+		Client: restfake.CreateHTTPClient(frt.run),
 	}
 
 	restClient, _ := rest.RESTClientFor(&rest.Config{
@@ -1456,8 +1459,9 @@ func TestReconcileInitializeControlPlanes(t *testing.T) {
 
 	expectedLabels := map[string]string{clusterv1.ClusterNameLabel: cluster.Name}
 
+	frt := &fakeRoundTripper{}
 	fakeClient := &restfake.RESTClient{
-		Client: restfake.CreateHTTPClient(roundTripperForWorkloadClusterAPI),
+		Client: restfake.CreateHTTPClient(frt.run),
 	}
 
 	restClient, _ := rest.RESTClientFor(&rest.Config{
@@ -1607,7 +1611,11 @@ func generateKubeconfigRequiringRotation(clusterName string) ([]byte, error) {
 	return clientcmd.Write(*config)
 }
 
-func roundTripperForWorkloadClusterAPI(req *http.Request) (*http.Response, error) {
+type fakeRoundTripper struct {
+	plan *autopilot.Plan
+}
+
+func (f *fakeRoundTripper) run(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Set("Content-Type", runtime.ContentTypeJSON)
 
@@ -1620,6 +1628,17 @@ func roundTripperForWorkloadClusterAPI(req *http.Request) (*http.Response, error
 			}
 			return &http.Response{StatusCode: http.StatusOK, Header: header, Body: io.NopCloser(bytes.NewReader(res))}, nil
 
+		}
+		if strings.HasPrefix(req.URL.Path, "/apis/autopilot.k0sproject.io/v1beta2/plans/autopilot") {
+			if f.plan != nil {
+				res, err := yaml.Marshal(f.plan)
+				if err != nil {
+					return nil, err
+				}
+				return &http.Response{StatusCode: http.StatusOK, Header: header, Body: io.NopCloser(bytes.NewReader(res))}, nil
+			}
+
+			return &http.Response{StatusCode: http.StatusNotFound, Header: header, Body: nil}, nil
 		}
 	case "DELETE":
 		if strings.HasPrefix(req.URL.Path, "/apis/autopilot.k0sproject.io/v1beta2/controlnodes/") {

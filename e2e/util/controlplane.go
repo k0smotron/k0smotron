@@ -37,11 +37,16 @@ import (
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func WaitForControlPlaneToBeReady(ctx context.Context, client crclient.Client, cpObjectKey crclient.ObjectKey, interval Interval) error {
+func WaitForControlPlaneToBeReady(ctx context.Context, client crclient.Client, cp *cpv1beta1.K0sControlPlane, interval Interval) error {
 	fmt.Println("Waiting for the control plane to be ready")
+
+	controlplaneObjectKey := crclient.ObjectKey{
+		Name:      cp.Name,
+		Namespace: cp.Namespace,
+	}
 	controlplane := &cpv1beta1.K0sControlPlane{}
 	err := wait.PollUntilContextTimeout(ctx, interval.tick, interval.timeout, true, func(ctx context.Context) (done bool, err error) {
-		if err := client.Get(ctx, cpObjectKey, controlplane); err != nil {
+		if err := client.Get(ctx, controlplaneObjectKey, controlplane); err != nil {
 			return false, errors.Wrapf(err, "failed to get controlplane")
 		}
 
@@ -98,11 +103,7 @@ func UpgradeControlPlaneAndWaitForReadyUpgrade(ctx context.Context, input Upgrad
 		return fmt.Errorf("failed to patch the new kubernetes version to controlplane %s: %w", klog.KObj(input.ControlPlane), err)
 	}
 
-	controlplaneObjectKey := crclient.ObjectKey{
-		Name:      input.ControlPlane.Name,
-		Namespace: input.ControlPlane.Namespace,
-	}
-	err = WaitForControlPlaneToBeReady(ctx, input.ClusterProxy.GetClient(), controlplaneObjectKey, input.WaitForControlPlaneReadyInterval)
+	err = WaitForControlPlaneToBeReady(ctx, input.ClusterProxy.GetClient(), input.ControlPlane, input.WaitForControlPlaneReadyInterval)
 	if err != nil {
 		return err
 	}

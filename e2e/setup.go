@@ -43,6 +43,16 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// Test suite constants for e2e config variables.
+const (
+	KubernetesVersion                = "KUBERNETES_VERSION"
+	KubernetesVersionManagement      = "KUBERNETES_VERSION_MANAGEMENT"
+	KubernetesVersionFirstUpgradeTo  = "KUBERNETES_VERSION_FIRST_UPGRADE_TO"
+	KubernetesVersionSecondUpgradeTo = "KUBERNETES_VERSION_SECOND_UPGRADE_TO"
+	ControlPlaneMachineCount         = "CONTROL_PLANE_MACHINE_COUNT"
+	IPFamily                         = "IP_FAMILY"
+)
+
 var (
 	ctx = ctrl.SetupSignalHandler()
 
@@ -86,7 +96,7 @@ func init() {
 	flag.BoolVar(&useExistingCluster, "use-existing-cluster", false, "if true, the test uses the current cluster instead of creating a new one (default discovery rules apply)")
 }
 
-func TestMain(m *testing.M) {
+func setup(t *testing.T, test func(t *testing.T)) {
 	ctrl.SetLogger(klog.Background())
 	flag.Parse()
 
@@ -102,13 +112,13 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	code := m.Run()
+	defer func() {
+		if !skipCleanup {
+			tearDown(managementClusterProvider, managementClusterProxy)
+		}
+	}()
 
-	if !skipCleanup {
-		tearDown(managementClusterProvider, managementClusterProxy)
-	}
-
-	os.Exit(code)
+	test(t)
 }
 
 func setupMothership() error {

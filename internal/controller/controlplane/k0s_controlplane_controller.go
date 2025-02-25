@@ -143,8 +143,14 @@ func (c *K0sController) Reconcile(ctx context.Context, req ctrl.Request) (res ct
 		// Separate var for status update errors to avoid shadowing err
 		derr := c.updateStatus(ctx, kcp, cluster)
 		if derr != nil {
-			log.Error(derr, "Failed to update status")
-			return
+			if !errors.Is(derr, errUpgradeNotCompleted) {
+				log.Error(derr, "Failed to update status")
+				return
+			}
+
+			if res.IsZero() {
+				res = ctrl.Result{RequeueAfter: 10 * time.Second}
+			}
 		}
 
 		if errors.Is(err, ErrNotReady) || reflect.DeepEqual(existingStatus, kcp.Status) {
