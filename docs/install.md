@@ -4,6 +4,10 @@ This section describes how to install k0smotron on top of an existing k0s
 Kubernetes cluster that allows for creation and management of the k0s
 control plane.
 
+!!! warning "Pre-requisites"
+
+    Before installing k0smotron, ensure that you have [cert-manager](https://cert-manager.io/docs/installation/) installed
+
 !!! note "TL;DR"
 
     ```bash
@@ -43,6 +47,7 @@ k0smotron requires the following software to be preinstalled:
   For Cluster API integration, you can use a
   [Cluster API cluster](https://cluster-api.sigs.k8s.io/reference/glossary.html#management-cluster).
 * `kubectl` installed locally.
+* [cert-manager](https://cert-manager.io/docs/installation/) installed in the management cluster.
 * For Cluster API integration:
 
   * [clusterctl](https://cluster-api.sigs.k8s.io/user/quick-start.html#install-clusterctl)

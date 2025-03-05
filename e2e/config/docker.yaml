@@ -35,6 +35,8 @@ providers:
             new: "imagePullPolicy: IfNotPresent"
     files:
       - sourcePath: "../data/infrastructure-docker/cluster-template-out-of-cluster.yaml"
+      - sourcePath: "../data/infrastructure-docker/cluster-template-admission-webhook-t1.yaml"
+      - sourcePath: "../data/infrastructure-docker/cluster-template-admission-webhook-t2.yaml"
   - name: k0sproject-k0smotron
     type: ControlPlaneProvider
     versions:

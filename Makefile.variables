@@ -7,3 +7,5 @@ CRDOC_VERSION ?= v0.6.2
 e2esuite := \
     workload-cluster-inplace-upgrade \
     workload-cluster-recreate-upgrade \
+    admission-webhook-t1 \
+    admission-webhook-t2 \

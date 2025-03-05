@@ -44,7 +44,7 @@ type PVCSuite struct {
 
 func (s *PVCSuite) TestK0sGetsUp() {
 	s.T().Log("starting k0s")
-	s.Require().NoError(s.InitController(0, "--disable-components=konnectivity-server,metrics-server"))
+	s.Require().NoError(s.InitController(0, "--disable-components=metrics-server"))
 	s.Require().NoError(s.RunWorkers())
 
 	kc, err := s.KubeClient(s.ControllerNode(0))

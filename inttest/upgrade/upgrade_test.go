@@ -60,7 +60,7 @@ func TestUpgradeSuite(t *testing.T) {
 // - Check the status of the k0smotron cluster is Ready and with it its related resources after upgrade.
 func (s *UpgradeSuite) TestK0smotronUpgrade() {
 	s.T().Log("starting k0s")
-	s.Require().NoError(s.InitController(0, "--disable-components=konnectivity-server,metrics-server"))
+	s.Require().NoError(s.InitController(0, "--disable-components=metrics-server"))
 	s.Require().NoError(s.RunWorkers())
 
 	kc, err := s.KubeClient(s.ControllerNode(0))

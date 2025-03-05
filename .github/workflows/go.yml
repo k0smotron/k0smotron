@@ -182,6 +182,8 @@ jobs:
         e2e-suite:
           - workload-cluster-inplace-upgrade
           - workload-cluster-recreate-upgrade
+          - admission-webhook-t1
+          - admission-webhook-t2
 
     steps:
       - name: Check out code into the Go module directory

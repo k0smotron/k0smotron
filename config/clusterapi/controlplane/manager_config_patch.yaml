@@ -6,7 +6,13 @@ metadata:
   labels:
     k0smotron-provider: control-plane
 spec:
+  selector:
+    matchLabels:
+      k0smotron-provider: control-plane
   template:
+    metadata:
+      labels:
+        k0smotron-provider: control-plane
     spec:
       containers:
       - name: manager

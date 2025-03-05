@@ -3,7 +3,7 @@ ARG BUILD_IMG
 ARG TARGETOS
 ARG TARGETARCH
 
-FROM ${BUILD_IMG} as builder
+FROM ${BUILD_IMG} AS builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests

@@ -38,7 +38,7 @@ jobs:
         uses: supplypike/setup-bin@v4
         with:
           name: kind
-          version: v0.24.0
+          version: v0.27.0
           uri: https://github.com/kubernetes-sigs/kind/releases/download/v0.24.0/kind-linux-amd64
 
       - name: Install support-bundle
@@ -80,6 +80,7 @@ jobs:
       - name: Install cluster api components
         run: |
           CLUSTER_TOPOLOGY=true clusterctl init --control-plane k0sproject-k0smotron --bootstrap k0sproject-k0smotron --infrastructure k0sproject-k0smotron,docker --config config.yaml
+          kubectl wait --for=condition=available -n cert-manager deployment/cert-manager-webhook --timeout=300s
 
       - name: Install PVC provider
         run: |

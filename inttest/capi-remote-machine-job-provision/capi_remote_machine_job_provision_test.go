@@ -113,7 +113,7 @@ func (s *RemoteMachineSuite) TestCAPIRemoteMachine() {
 
 	s.Require().NoError(err)
 	defer func() {
-		keep := os.Getenv("KEEP_CLUSTER_AFTER_TEST")
+		keep := os.Getenv("KEEP_AFTER_TEST")
 		if keep == "true" {
 			return
 		}

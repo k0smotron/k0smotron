@@ -6,7 +6,13 @@ metadata:
   labels:
     k0smotron-provider: bootstrap
 spec:
+  selector:
+    matchLabels:
+      k0smotron-provider: bootstrap
   template:
+    metadata:
+      labels:
+        k0smotron-provider: bootstrap
     spec:
       containers:
       - name: manager

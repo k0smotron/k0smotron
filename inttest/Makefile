@@ -4,6 +4,7 @@ FOOTLOOSE_IMAGE ?= footloose-alpine
 K0SMOTRON_IMAGES_BUNDLE ?= $(realpath ../k0smotron-image-bundle.tar)
 K0SMOTRON_INSTALL_YAML ?= $(realpath ../install.yaml)
 LOCAL_STORAGE_INSTALL_YAML ?= $(realpath ./footloose-alpine/local-path-storage.yaml)
+CERT_MANAGER_INSTALL_YAML ?= $(realpath ./footloose-alpine/cert-manager.yaml)
 K0S_USE_DEFAULT_K0S_BINARIES ?= true
 K0S_VERSION ?= v1.30.2
 TIMEOUT ?= 8m
@@ -31,6 +32,7 @@ $(smoketests): ../k0smotron-image-bundle.tar ../install.yaml .footloose-alpine.s
 	K0SMOTRON_INSTALL_YAML='$(K0SMOTRON_INSTALL_YAML)' \
 	K0S_VERSION='$(K0S_VERSION)' \
 	LOCAL_STORAGE_INSTALL_YAML='$(LOCAL_STORAGE_INSTALL_YAML)' \
+	CERT_MANAGER_INSTALL_YAML='$(CERT_MANAGER_INSTALL_YAML)' \
 	K0S_USE_DEFAULT_K0S_BINARIES=$(K0S_USE_DEFAULT_K0S_BINARIES) \
 	go test -count=1 -v -timeout $(TIMEOUT) github.com/k0smotron/k0smotron/inttest/$(TEST_PACKAGE)
 
