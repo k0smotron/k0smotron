@@ -185,7 +185,7 @@ func TestResolveFilesErrorExtractingFileContent(t *testing.T) {
 }
 
 func newCluster(namespace string) *clusterv1.Cluster {
-	clusterName := fmt.Sprintf("kcp-foo-%s", util.RandomString(6))
+	clusterName := fmt.Sprintf("foo-%s", util.RandomString(6))
 
 	return &clusterv1.Cluster{
 		TypeMeta: metav1.TypeMeta{
@@ -195,6 +195,12 @@ func newCluster(namespace string) *clusterv1.Cluster {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 			Name:      clusterName,
+		},
+		Spec: clusterv1.ClusterSpec{
+			ControlPlaneEndpoint: clusterv1.APIEndpoint{
+				Host: "test.host",
+				Port: 9999,
+			},
 		},
 	}
 }

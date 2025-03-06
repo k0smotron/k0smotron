@@ -58,6 +58,8 @@ type Controller struct {
 	Scheme     *runtime.Scheme
 	ClientSet  *kubernetes.Clientset
 	RESTConfig *rest.Config
+	// workloadClusterClient is used during testing to inject a fake client
+	workloadClusterClient client.Client
 }
 
 type Scope struct {
@@ -269,16 +271,19 @@ func (r *Controller) generateBootstrapDataForWorker(ctx context.Context, log log
 }
 
 func (r *Controller) getK0sToken(ctx context.Context, scope *Scope) (string, error) {
-	childClient, err := remote.NewClusterClient(ctx, "k0smotron", r.Client, capiutil.ObjectKey(scope.Cluster))
-	if err != nil {
-		return "", fmt.Errorf("failed to create child cluster client: %w", err)
+	if r.workloadClusterClient == nil {
+		var err error
+		r.workloadClusterClient, err = remote.NewClusterClient(ctx, "k0smotron", r.Client, capiutil.ObjectKey(scope.Cluster))
+		if err != nil {
+			return "", fmt.Errorf("failed to create child cluster client: %w", err)
+		}
 	}
 
 	// Create the token using the child cluster client
 	tokenID := kutil.RandomString(6)
 	tokenSecret := kutil.RandomString(16)
 	token := fmt.Sprintf("%s.%s", tokenID, tokenSecret)
-	if err := childClient.Create(ctx, &corev1.Secret{
+	if err := r.workloadClusterClient.Create(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("bootstrap-token-%s", tokenID),
 			Namespace: "kube-system",
