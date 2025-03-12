@@ -4495,6 +4495,13 @@ spec:
                 type: boolean
               reconciliationStatus:
                 type: string
+              replicas:
+                format: int32
+                type: integer
+              selector:
+                description: selector is the label selector for pods that should match
+                  the replicas count.
+                type: string
             required:
             - reconciliationStatus
             type: object
@@ -4502,4 +4509,8 @@ spec:
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.selector
+        specReplicasPath: .spec.replicas
+        statusReplicasPath: .status.replicas
       status: {}

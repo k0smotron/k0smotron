@@ -59,9 +59,10 @@ const (
 	clusterFinalizer = "k0smotron.io/finalizer"
 )
 
-//+kubebuilder:rbac:groups=k0smotron.io,resources=clusters,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=k0smotron.io,resources=clusters/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=k0smotron.io,resources=clusters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=k0smotron.io,resources=clusters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k0smotron.io,resources=clusters/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k0smotron.io,resources=clusters/scale,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k0smotron.io,resources=clusters/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
@@ -242,6 +243,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	kmc.Status.ReconciliationStatus = "Reconciliation successful"
+
 	return ctrl.Result{}, nil
 }
 
