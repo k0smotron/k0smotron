@@ -169,9 +169,9 @@ func (p *JobProvisioner) extractCloudInit(cloudInit *cloudinit.CloudInit) (volum
 
 	for _, cmd := range cloudInit.RunCmds {
 		if p.remoteMachine.Spec.UseSudo {
-			cmd = fmt.Sprintf("sudo su -c \\'%s\\'\n", cmd)
+			cmd = fmt.Sprintf("sudo su -c '%s'", cmd)
 		}
-		buf.WriteString(fmt.Sprintf("%s '%s'\n", sshCommand, cmd))
+		buf.WriteString(fmt.Sprintf("%s \"%s\"\n", sshCommand, cmd))
 	}
 	secretData["k0smotron-entrypoint.sh"] = buf.Bytes()
 

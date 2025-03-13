@@ -10,7 +10,7 @@ ARG TROUBLESHOOT_VERSION=v0.61.0
 # Apply our changes to the image
 COPY root/ /
 
-RUN apk add openrc openssh-server bash busybox-openrc coreutils curl inotify-tools
+RUN apk add openrc openssh-server bash busybox-openrc coreutils curl inotify-tools sudo
 # enable syslog and sshd
 RUN rc-update add cgroups boot
 RUN rc-update add syslog boot

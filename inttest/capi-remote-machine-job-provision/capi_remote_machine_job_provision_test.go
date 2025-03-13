@@ -24,12 +24,13 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	infra "github.com/k0smotron/k0smotron/api/infrastructure/v1beta1"
-	"github.com/k0smotron/k0smotron/inttest/util"
-	"github.com/k0sproject/k0s/inttest/common"
 	"os"
 	"testing"
 	"text/template"
+
+	infra "github.com/k0smotron/k0smotron/api/infrastructure/v1beta1"
+	"github.com/k0smotron/k0smotron/inttest/util"
+	"github.com/k0sproject/k0s/inttest/common"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -319,6 +320,7 @@ metadata:
 spec:
   address: {{ .Address }}
   user: root
+  useSudo: true
   provisionJob:
     sshCommand: "ssh -o \"StrictHostKeyChecking=no\""
     scpCommand: "scp -o \"StrictHostKeyChecking=no\""
