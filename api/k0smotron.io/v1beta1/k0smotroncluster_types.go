@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	v2 "k8s.io/api/autoscaling/v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -106,6 +107,27 @@ type ClusterSpec struct {
 	TopologySpreadConstraints []v1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
 	// Resources describes the compute resource requirements for the control plane pods.
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+
+	Autoscaling *AutoscalingSpec `json:"autoscaling,omitempty"`
+}
+
+// AutoscalingSpec defines the autoscaling configuration for the control plane pods.
+type AutoscalingSpec struct {
+	// HorizontalPodAutoscalingSpec defines the desired state of HorizontalPodAutoscaler object for the control plane pods.
+	HorizontalPodAutoscaling *HorizontalPodAutoscalingSpec `json:"horizontalPodAutoscaling,omitempty"`
+}
+
+type HorizontalPodAutoscalingSpec struct {
+	// MinReplicas is the lower limit for the number of replicas that can be set by the autoscaler.
+	//+kubebuilder:validation:Optional
+	MinReplicas int32 `json:"minReplicas"`
+	// MaxReplicas is the upper limit for the number of replicas that can be set by the autoscaler.
+	// It cannot be smaller than MinReplicas.
+	// +kubebuilder:validation:Required
+	MaxReplicas int32 `json:"maxReplicas"`
+	// Metrics defines the metrics to be used for autoscaling.
+	// +kubebuilder:validation:Required
+	Metrics []v2.MetricSpec `json:"metrics"`
 }
 
 type Mount struct {
@@ -143,10 +165,14 @@ func (c *ClusterSpec) GetImage() string {
 type ClusterStatus struct {
 	ReconciliationStatus string `json:"reconciliationStatus"`
 	Ready                bool   `json:"ready,omitempty"`
+	Replicas             int32  `json:"replicas,omitempty"`
+	// selector is the label selector for pods that should match the replicas count.
+	Selector string `json:"selector,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
 //+kubebuilder:resource:shortName=kmc
 
 // Cluster is the Schema for the k0smotronclusters API

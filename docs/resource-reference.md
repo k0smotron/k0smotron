@@ -3378,6 +3378,13 @@ ClusterSpec defines the desired state of K0smotronCluster
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscaling">autoscaling</a></b></td>
+        <td>object</td>
+        <td>
+          AutoscalingSpec defines the autoscaling configuration for the control plane pods.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#k0smotroncontrolplanespeccertificaterefsindex">certificateRefs</a></b></td>
         <td>[]object</td>
         <td>
@@ -3525,6 +3532,1032 @@ See https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-cons
         <td>
           Version defines the k0s version to be deployed. If empty k0smotron
 will pick it automatically.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespec)</sup></sup>
+
+
+
+AutoscalingSpec defines the autoscaling configuration for the control plane pods.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscaling">horizontalPodAutoscaling</a></b></td>
+        <td>object</td>
+        <td>
+          HorizontalPodAutoscalingSpec defines the desired state of HorizontalPodAutoscaler object for the control plane pods.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscaling)</sup></sup>
+
+
+
+HorizontalPodAutoscalingSpec defines the desired state of HorizontalPodAutoscaler object for the control plane pods.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>maxReplicas</b></td>
+        <td>integer</td>
+        <td>
+          MaxReplicas is the upper limit for the number of replicas that can be set by the autoscaler.
+It cannot be smaller than MinReplicas.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindex">metrics</a></b></td>
+        <td>[]object</td>
+        <td>
+          Metrics defines the metrics to be used for autoscaling.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>minReplicas</b></td>
+        <td>integer</td>
+        <td>
+          MinReplicas is the lower limit for the number of replicas that can be set by the autoscaler.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscaling)</sup></sup>
+
+
+
+MetricSpec specifies how to scale based on a single metric
+(only `type` and one other matching field should be set at once).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type is the type of metric source.  It should be one of "ContainerResource", "External",
+"Object", "Pods" or "Resource", each mapping to a matching field in the object.
+Note: "ContainerResource" type is available on when the feature-gate
+HPAContainerMetrics is enabled<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexcontainerresource">containerResource</a></b></td>
+        <td>object</td>
+        <td>
+          containerResource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing a single container in
+each pod of the current scale target (e.g. CPU or memory). Such metrics are
+built in to Kubernetes, and have special scaling options on top of those
+available to normal per-pod metrics using the "pods" source.
+This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternal">external</a></b></td>
+        <td>object</td>
+        <td>
+          external refers to a global metric that is not associated
+with any Kubernetes object. It allows autoscaling based on information
+coming from components running outside of cluster
+(for example length of queue in cloud messaging service, or
+QPS from loadbalancer running outside of cluster).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobject">object</a></b></td>
+        <td>object</td>
+        <td>
+          object refers to a metric describing a single kubernetes object
+(for example, hits-per-second on an Ingress object).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpods">pods</a></b></td>
+        <td>object</td>
+        <td>
+          pods refers to a metric describing each pod in the current scale target
+(for example, transactions-processed-per-second).  The values will be
+averaged together before being compared to the target value.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexresource">resource</a></b></td>
+        <td>object</td>
+        <td>
+          resource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing each pod in the
+current scale target (e.g. CPU or memory). Such metrics are built in to
+Kubernetes, and have special scaling options on top of those available
+to normal per-pod metrics using the "pods" source.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].containerResource
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+containerResource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing a single container in
+each pod of the current scale target (e.g. CPU or memory). Such metrics are
+built in to Kubernetes, and have special scaling options on top of those
+available to normal per-pod metrics using the "pods" source.
+This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>container</b></td>
+        <td>string</td>
+        <td>
+          container is the name of the container in the pods of the scaling target<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the resource in question.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexcontainerresourcetarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].containerResource.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexcontainerresource)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+external refers to a global metric that is not associated
+with any Kubernetes object. It allows autoscaling based on information
+coming from components running outside of cluster
+(for example length of queue in cloud messaging service, or
+QPS from loadbalancer running outside of cluster).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternaltarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternal)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric.selector
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexexternal)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+object refers to a metric describing a single kubernetes object
+(for example, hits-per-second on an Ingress object).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobjectdescribedobject">describedObject</a></b></td>
+        <td>object</td>
+        <td>
+          describedObject specifies the descriptions of a object,such as kind,name apiVersion<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobjecttarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.describedObject
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+describedObject specifies the descriptions of a object,such as kind,name apiVersion
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>apiVersion</b></td>
+        <td>string</td>
+        <td>
+          apiVersion is the API version of the referent<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric.selector
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+pods refers to a metric describing each pod in the current scale target
+(for example, transactions-processed-per-second).  The values will be
+averaged together before being compared to the target value.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpodstarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpods)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric.selector
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexpods)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].resource
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+resource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing each pod in the
+current scale target (e.g. CPU or memory). Such metrics are built in to
+Kubernetes, and have special scaling options on top of those available
+to normal per-pod metrics using the "pods" source.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the resource in question.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexresourcetarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.autoscaling.horizontalPodAutoscaling.metrics[index].resource.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecautoscalinghorizontalpodautoscalingmetricsindexresource)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12397,6 +13430,13 @@ to check the operational state of the control plane.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>selector</b></td>
+        <td>string</td>
+        <td>
+          selector is the label selector for pods that should match the replicas count.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>unavailableReplicas</b></td>
         <td>integer</td>
         <td>
@@ -12608,6 +13648,13 @@ ClusterSpec defines the desired state of K0smotronCluster
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscaling">autoscaling</a></b></td>
+        <td>object</td>
+        <td>
+          AutoscalingSpec defines the autoscaling configuration for the control plane pods.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespeccertificaterefsindex">certificateRefs</a></b></td>
         <td>[]object</td>
         <td>
@@ -12755,6 +13802,1032 @@ See https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-cons
         <td>
           Version defines the k0s version to be deployed. If empty k0smotron
 will pick it automatically.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespec)</sup></sup>
+
+
+
+AutoscalingSpec defines the autoscaling configuration for the control plane pods.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscaling">horizontalPodAutoscaling</a></b></td>
+        <td>object</td>
+        <td>
+          HorizontalPodAutoscalingSpec defines the desired state of HorizontalPodAutoscaler object for the control plane pods.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscaling)</sup></sup>
+
+
+
+HorizontalPodAutoscalingSpec defines the desired state of HorizontalPodAutoscaler object for the control plane pods.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>maxReplicas</b></td>
+        <td>integer</td>
+        <td>
+          MaxReplicas is the upper limit for the number of replicas that can be set by the autoscaler.
+It cannot be smaller than MinReplicas.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindex">metrics</a></b></td>
+        <td>[]object</td>
+        <td>
+          Metrics defines the metrics to be used for autoscaling.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>minReplicas</b></td>
+        <td>integer</td>
+        <td>
+          MinReplicas is the lower limit for the number of replicas that can be set by the autoscaler.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscaling)</sup></sup>
+
+
+
+MetricSpec specifies how to scale based on a single metric
+(only `type` and one other matching field should be set at once).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type is the type of metric source.  It should be one of "ContainerResource", "External",
+"Object", "Pods" or "Resource", each mapping to a matching field in the object.
+Note: "ContainerResource" type is available on when the feature-gate
+HPAContainerMetrics is enabled<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexcontainerresource">containerResource</a></b></td>
+        <td>object</td>
+        <td>
+          containerResource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing a single container in
+each pod of the current scale target (e.g. CPU or memory). Such metrics are
+built in to Kubernetes, and have special scaling options on top of those
+available to normal per-pod metrics using the "pods" source.
+This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternal">external</a></b></td>
+        <td>object</td>
+        <td>
+          external refers to a global metric that is not associated
+with any Kubernetes object. It allows autoscaling based on information
+coming from components running outside of cluster
+(for example length of queue in cloud messaging service, or
+QPS from loadbalancer running outside of cluster).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobject">object</a></b></td>
+        <td>object</td>
+        <td>
+          object refers to a metric describing a single kubernetes object
+(for example, hits-per-second on an Ingress object).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpods">pods</a></b></td>
+        <td>object</td>
+        <td>
+          pods refers to a metric describing each pod in the current scale target
+(for example, transactions-processed-per-second).  The values will be
+averaged together before being compared to the target value.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexresource">resource</a></b></td>
+        <td>object</td>
+        <td>
+          resource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing each pod in the
+current scale target (e.g. CPU or memory). Such metrics are built in to
+Kubernetes, and have special scaling options on top of those available
+to normal per-pod metrics using the "pods" source.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].containerResource
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+containerResource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing a single container in
+each pod of the current scale target (e.g. CPU or memory). Such metrics are
+built in to Kubernetes, and have special scaling options on top of those
+available to normal per-pod metrics using the "pods" source.
+This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>container</b></td>
+        <td>string</td>
+        <td>
+          container is the name of the container in the pods of the scaling target<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the resource in question.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexcontainerresourcetarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].containerResource.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexcontainerresource)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+external refers to a global metric that is not associated
+with any Kubernetes object. It allows autoscaling based on information
+coming from components running outside of cluster
+(for example length of queue in cloud messaging service, or
+QPS from loadbalancer running outside of cluster).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternaltarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternal)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric.selector
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexexternal)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+object refers to a metric describing a single kubernetes object
+(for example, hits-per-second on an Ingress object).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobjectdescribedobject">describedObject</a></b></td>
+        <td>object</td>
+        <td>
+          describedObject specifies the descriptions of a object,such as kind,name apiVersion<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobjecttarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.describedObject
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+describedObject specifies the descriptions of a object,such as kind,name apiVersion
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>apiVersion</b></td>
+        <td>string</td>
+        <td>
+          apiVersion is the API version of the referent<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric.selector
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+pods refers to a metric describing each pod in the current scale target
+(for example, transactions-processed-per-second).  The values will be
+averaged together before being compared to the target value.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpodstarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpods)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric.selector
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexpods)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].resource
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+resource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing each pod in the
+current scale target (e.g. CPU or memory). Such metrics are built in to
+Kubernetes, and have special scaling options on top of those available
+to normal per-pod metrics using the "pods" source.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the resource in question.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexresourcetarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.autoscaling.horizontalPodAutoscaling.metrics[index].resource.target
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecautoscalinghorizontalpodautoscalingmetricsindexresource)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -38776,6 +40849,13 @@ ClusterSpec defines the desired state of K0smotronCluster
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#clusterspecautoscaling">autoscaling</a></b></td>
+        <td>object</td>
+        <td>
+          AutoscalingSpec defines the autoscaling configuration for the control plane pods.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#clusterspeccertificaterefsindex">certificateRefs</a></b></td>
         <td>[]object</td>
         <td>
@@ -38923,6 +41003,1032 @@ See https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-cons
         <td>
           Version defines the k0s version to be deployed. If empty k0smotron
 will pick it automatically.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling
+<sup><sup>[↩ Parent](#clusterspec)</sup></sup>
+
+
+
+AutoscalingSpec defines the autoscaling configuration for the control plane pods.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscaling">horizontalPodAutoscaling</a></b></td>
+        <td>object</td>
+        <td>
+          HorizontalPodAutoscalingSpec defines the desired state of HorizontalPodAutoscaler object for the control plane pods.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling
+<sup><sup>[↩ Parent](#clusterspecautoscaling)</sup></sup>
+
+
+
+HorizontalPodAutoscalingSpec defines the desired state of HorizontalPodAutoscaler object for the control plane pods.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>maxReplicas</b></td>
+        <td>integer</td>
+        <td>
+          MaxReplicas is the upper limit for the number of replicas that can be set by the autoscaler.
+It cannot be smaller than MinReplicas.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindex">metrics</a></b></td>
+        <td>[]object</td>
+        <td>
+          Metrics defines the metrics to be used for autoscaling.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>minReplicas</b></td>
+        <td>integer</td>
+        <td>
+          MinReplicas is the lower limit for the number of replicas that can be set by the autoscaler.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index]
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscaling)</sup></sup>
+
+
+
+MetricSpec specifies how to scale based on a single metric
+(only `type` and one other matching field should be set at once).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type is the type of metric source.  It should be one of "ContainerResource", "External",
+"Object", "Pods" or "Resource", each mapping to a matching field in the object.
+Note: "ContainerResource" type is available on when the feature-gate
+HPAContainerMetrics is enabled<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexcontainerresource">containerResource</a></b></td>
+        <td>object</td>
+        <td>
+          containerResource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing a single container in
+each pod of the current scale target (e.g. CPU or memory). Such metrics are
+built in to Kubernetes, and have special scaling options on top of those
+available to normal per-pod metrics using the "pods" source.
+This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternal">external</a></b></td>
+        <td>object</td>
+        <td>
+          external refers to a global metric that is not associated
+with any Kubernetes object. It allows autoscaling based on information
+coming from components running outside of cluster
+(for example length of queue in cloud messaging service, or
+QPS from loadbalancer running outside of cluster).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobject">object</a></b></td>
+        <td>object</td>
+        <td>
+          object refers to a metric describing a single kubernetes object
+(for example, hits-per-second on an Ingress object).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpods">pods</a></b></td>
+        <td>object</td>
+        <td>
+          pods refers to a metric describing each pod in the current scale target
+(for example, transactions-processed-per-second).  The values will be
+averaged together before being compared to the target value.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexresource">resource</a></b></td>
+        <td>object</td>
+        <td>
+          resource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing each pod in the
+current scale target (e.g. CPU or memory). Such metrics are built in to
+Kubernetes, and have special scaling options on top of those available
+to normal per-pod metrics using the "pods" source.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].containerResource
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+containerResource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing a single container in
+each pod of the current scale target (e.g. CPU or memory). Such metrics are
+built in to Kubernetes, and have special scaling options on top of those
+available to normal per-pod metrics using the "pods" source.
+This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>container</b></td>
+        <td>string</td>
+        <td>
+          container is the name of the container in the pods of the scaling target<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the resource in question.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexcontainerresourcetarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].containerResource.target
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexcontainerresource)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+external refers to a global metric that is not associated
+with any Kubernetes object. It allows autoscaling based on information
+coming from components running outside of cluster
+(for example length of queue in cloud messaging service, or
+QPS from loadbalancer running outside of cluster).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternalmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternaltarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternal)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric.selector
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternalmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternalmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].external.target
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexexternal)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+object refers to a metric describing a single kubernetes object
+(for example, hits-per-second on an Ingress object).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobjectdescribedobject">describedObject</a></b></td>
+        <td>object</td>
+        <td>
+          describedObject specifies the descriptions of a object,such as kind,name apiVersion<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobjectmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobjecttarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.describedObject
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+describedObject specifies the descriptions of a object,such as kind,name apiVersion
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>apiVersion</b></td>
+        <td>string</td>
+        <td>
+          apiVersion is the API version of the referent<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric.selector
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobjectmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobjectmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].object.target
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexobject)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+pods refers to a metric describing each pod in the current scale target
+(for example, transactions-processed-per-second).  The values will be
+averaged together before being compared to the target value.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpodsmetric">metric</a></b></td>
+        <td>object</td>
+        <td>
+          metric identifies the target metric by name and selector<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpodstarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpods)</sup></sup>
+
+
+
+metric identifies the target metric by name and selector
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric.selector
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpodsmetric)</sup></sup>
+
+
+
+selector is the string-encoded form of a standard kubernetes label selector for the given metric
+When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping.
+When unset, just the metricName will be used to gather metrics.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td>[]object</td>
+        <td>
+          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>matchLabels</b></td>
+        <td>map[string]string</td>
+        <td>
+          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+map is equivalent to an element of matchExpressions, whose key field is "key", the
+operator is "In", and the values array contains only "value". The requirements are ANDed.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.metric.selector.matchExpressions[index]
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpodsmetricselector)</sup></sup>
+
+
+
+A label selector requirement is a selector that contains values, a key, and an operator that
+relates the key and values.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          key is the label key that the selector applies to.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          operator represents a key's relationship to a set of values.
+Valid operators are In, NotIn, Exists and DoesNotExist.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          values is an array of string values. If the operator is In or NotIn,
+the values array must be non-empty. If the operator is Exists or DoesNotExist,
+the values array must be empty. This array is replaced during a strategic
+merge patch.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].pods.target
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexpods)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].resource
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindex)</sup></sup>
+
+
+
+resource refers to a resource metric (such as those specified in
+requests and limits) known to Kubernetes describing each pod in the
+current scale target (e.g. CPU or memory). Such metrics are built in to
+Kubernetes, and have special scaling options on top of those available
+to normal per-pod metrics using the "pods" source.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          name is the name of the resource in question.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecautoscalinghorizontalpodautoscalingmetricsindexresourcetarget">target</a></b></td>
+        <td>object</td>
+        <td>
+          target specifies the target value for the given metric<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.autoscaling.horizontalPodAutoscaling.metrics[index].resource.target
+<sup><sup>[↩ Parent](#clusterspecautoscalinghorizontalpodautoscalingmetricsindexresource)</sup></sup>
+
+
+
+target specifies the target value for the given metric
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type represents whether the metric type is Utilization, Value, or AverageValue<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>averageUtilization</b></td>
+        <td>integer</td>
+        <td>
+          averageUtilization is the target value of the average of the
+resource metric across all relevant pods, represented as a percentage of
+the requested value of the resource for the pods.
+Currently only valid for Resource metric source type<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>averageValue</b></td>
+        <td>int or string</td>
+        <td>
+          averageValue is the target value of the average of the
+metric across all relevant pods (as a quantity)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>int or string</td>
+        <td>
+          value is the target value of the metric (as a quantity).<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -47763,6 +50869,22 @@ ClusterStatus defines the observed state of K0smotronCluster
         <td>boolean</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>replicas</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selector</b></td>
+        <td>string</td>
+        <td>
+          selector is the label selector for pods that should match the replicas count.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
