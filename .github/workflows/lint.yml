@@ -47,7 +47,9 @@ jobs:
             ~/.cache/golangci-lint
 
       - name: Check generated code to be consistent
-        run: make clean && make generate manifests clusterapi-manifests docs-generate-reference release && git diff --exit-code
+        run: |
+         export TAG=`git describe --tags --abbrev=0`
+         make clean && make generate manifests clusterapi-manifests docs-generate-reference release helm IMG=quay.io/k0sproject/k0smotron:$TAG && git diff --exit-code
 
       - name: Run linter
         env:
