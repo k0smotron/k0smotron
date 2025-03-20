@@ -56,9 +56,10 @@ const (
 
 type Controller struct {
 	client.Client
-	Scheme     *runtime.Scheme
-	ClientSet  *kubernetes.Clientset
-	RESTConfig *rest.Config
+	SecretCachingClient client.Client
+	Scheme              *runtime.Scheme
+	ClientSet           *kubernetes.Clientset
+	RESTConfig          *rest.Config
 	// workloadClusterClient is used during testing to inject a fake client
 	workloadClusterClient client.Client
 }
@@ -315,7 +316,7 @@ func (r *Controller) getK0sToken(ctx context.Context, scope *Scope) (string, err
 	}
 
 	certificates := secret.NewCertificatesForWorker("")
-	if err := certificates.Lookup(ctx, r.Client, capiutil.ObjectKey(scope.Cluster)); err != nil {
+	if err := certificates.LookupCached(ctx, r.SecretCachingClient, r.Client, capiutil.ObjectKey(scope.Cluster)); err != nil {
 		return "", fmt.Errorf("failed to lookup CA certificates: %w", err)
 	}
 	ca := certificates.GetByPurpose(secret.ClusterCA)

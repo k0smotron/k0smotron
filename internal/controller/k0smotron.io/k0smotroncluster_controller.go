@@ -47,10 +47,11 @@ var patchOpts []client.PatchOption = []client.PatchOption{
 // ClusterReconciler reconciles a Cluster object
 type ClusterReconciler struct {
 	client.Client
-	Scheme     *runtime.Scheme
-	ClientSet  *kubernetes.Clientset
-	RESTConfig *rest.Config
-	Recorder   record.EventRecorder
+	SecretCachingClient client.Client
+	Scheme              *runtime.Scheme
+	ClientSet           *kubernetes.Clientset
+	RESTConfig          *rest.Config
+	Recorder            record.EventRecorder
 }
 
 const (
@@ -240,7 +241,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 func (r *ClusterReconciler) ensureCertificates(ctx context.Context, kmc *km.Cluster) error {
 	certificates := secret.NewCertificatesForInitialControlPlane(&bootstrapv1.ClusterConfiguration{})
-	err := certificates.LookupOrGenerate(ctx, r.Client, util.ObjectKey(kmc), *metav1.NewControllerRef(kmc, km.GroupVersion.WithKind("Cluster")))
+	err := certificates.LookupOrGenerateCached(ctx, r.SecretCachingClient, r.Client, util.ObjectKey(kmc), *metav1.NewControllerRef(kmc, km.GroupVersion.WithKind("Cluster")))
 	if err != nil {
 		return fmt.Errorf("error generating cluster certificates: %w", err)
 	}

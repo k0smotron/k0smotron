@@ -595,6 +595,7 @@ func TestReconcileGenerateBootstrapData(t *testing.T) {
 	r := &Controller{
 		Client:                testEnv,
 		workloadClusterClient: workloadClient,
+		SecretCachingClient:   secretCachingClient,
 	}
 
 	kcp := &cpv1beta1.K0sControlPlane{

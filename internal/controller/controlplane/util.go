@@ -42,7 +42,7 @@ func (c *K0sController) getMachineTemplate(ctx context.Context, kcp *cpv1beta1.K
 }
 
 func (c *K0sController) generateKubeconfig(ctx context.Context, clusterKey client.ObjectKey, endpoint string) (*api.Config, error) {
-	clusterCA, err := secret.GetFromNamespacedName(ctx, c.Client, clusterKey, secret.ClusterCA)
+	clusterCA, err := secret.GetFromNamespacedName(ctx, c.SecretCachingClient, clusterKey, secret.ClusterCA)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, kubeconfig.ErrDependentCertificateNotFound
@@ -137,7 +137,7 @@ func (c *K0sController) getKubeClient(ctx context.Context, cluster *clusterv1.Cl
 		return c.workloadClusterKubeClient, nil
 	}
 
-	return k0smoutil.GetKubeClient(ctx, c.Client, cluster)
+	return k0smoutil.GetKubeClient(ctx, c.SecretCachingClient, cluster)
 }
 
 func enrichK0sConfigWithClusterData(cluster *clusterv1.Cluster, k0sConfig *unstructured.Unstructured) (*unstructured.Unstructured, error) {

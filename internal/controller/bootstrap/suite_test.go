@@ -22,15 +22,32 @@ import (
 
 	"github.com/k0smotron/k0smotron/internal/test/envtest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 var (
-	testEnv *envtest.Environment
-	ctx     = ctrl.SetupSignalHandler()
+	testEnv             *envtest.Environment
+	secretCachingClient client.Client
+	ctx                 = ctrl.SetupSignalHandler()
 )
 
 func TestMain(m *testing.M) {
-	testEnv = envtest.Build(ctx)
+	setupSecretCachedClient := func(mgr manager.Manager) error {
+		var err error
+		secretCachingClient, err = client.New(mgr.GetConfig(), client.Options{
+			HTTPClient: mgr.GetHTTPClient(),
+			Cache: &client.CacheOptions{
+				Reader: mgr.GetCache(),
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+	testEnv = envtest.Build(ctx, setupSecretCachedClient)
 	code := m.Run()
 	testEnv.Teardown()
 	os.Exit(code)

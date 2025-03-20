@@ -76,8 +76,9 @@ var (
 
 type K0sController struct {
 	client.Client
-	ClientSet  *kubernetes.Clientset
-	RESTConfig *rest.Config
+	SecretCachingClient client.Client
+	ClientSet           *kubernetes.Clientset
+	RESTConfig          *rest.Config
 	// workloadClusterKubeClient is used during testing to inject a fake client
 	workloadClusterKubeClient *kubernetes.Clientset
 }
@@ -248,10 +249,10 @@ func (c *K0sController) reconcileKubeconfig(ctx context.Context, cluster *cluste
 		}
 	}()
 
-	workloadClusterKubeconfigSecret, err := secret.GetFromNamespacedName(ctx, c.Client, capiutil.ObjectKey(cluster), secret.Kubeconfig)
+	workloadClusterKubeconfigSecret, err := secret.GetFromNamespacedName(ctx, c.SecretCachingClient, capiutil.ObjectKey(cluster), secret.Kubeconfig)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return kubeconfig.CreateSecret(ctx, c.Client, cluster)
+			return kubeconfig.CreateSecret(ctx, c.SecretCachingClient, cluster)
 		}
 
 		return err
@@ -269,7 +270,7 @@ func (c *K0sController) reconcileKubeconfig(ctx context.Context, cluster *cluste
 			secretName := secret.Name(cluster.Name+"-proxied", secret.Kubeconfig)
 
 			proxiedKubeconfig := &corev1.Secret{}
-			err := c.Client.Get(ctx, client.ObjectKey{Namespace: cluster.Namespace, Name: secretName}, proxiedKubeconfig)
+			err := c.SecretCachingClient.Get(ctx, client.ObjectKey{Namespace: cluster.Namespace, Name: secretName}, proxiedKubeconfig)
 			if err != nil {
 				if apierrors.IsNotFound(err) {
 					kc, err := c.generateKubeconfig(ctx, clusterKey, fmt.Sprintf("https://%s", cluster.Spec.ControlPlaneEndpoint.String()))
@@ -294,7 +295,7 @@ func (c *K0sController) reconcileKubeconfig(ctx context.Context, cluster *cluste
 			secretName := secret.Name(cluster.Name+"-tunneled", secret.Kubeconfig)
 
 			tunneledKubeconfig := &corev1.Secret{}
-			err := c.Client.Get(ctx, client.ObjectKey{Namespace: cluster.Namespace, Name: secretName}, tunneledKubeconfig)
+			err := c.SecretCachingClient.Get(ctx, client.ObjectKey{Namespace: cluster.Namespace, Name: secretName}, tunneledKubeconfig)
 			if err != nil {
 				if apierrors.IsNotFound(err) {
 					kc, err := c.generateKubeconfig(ctx, clusterKey, fmt.Sprintf("https://%s:%d", kcp.Spec.K0sConfigSpec.Tunneling.ServerAddress, kcp.Spec.K0sConfigSpec.Tunneling.TunnelingNodePort))
@@ -630,7 +631,7 @@ func (c *K0sController) ensureCertificates(ctx context.Context, cluster *cluster
 	certificates := secret.NewCertificatesForInitialControlPlane(&kubeadmbootstrapv1.ClusterConfiguration{
 		CertificatesDir: "/var/lib/k0s/pki",
 	})
-	return certificates.LookupOrGenerate(ctx, c.Client, capiutil.ObjectKey(cluster), *metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0sControlPlane")))
+	return certificates.LookupOrGenerateCached(ctx, c.SecretCachingClient, c.Client, capiutil.ObjectKey(cluster), *metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0sControlPlane")))
 }
 
 func (c *K0sController) reconcileConfig(ctx context.Context, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0sControlPlane) error {
@@ -860,7 +861,7 @@ func (c *K0sController) createFRPToken(ctx context.Context, cluster *clusterv1.C
 	secretName := fmt.Sprintf(FRPTokenNameTemplate, cluster.Name)
 
 	var existingSecret corev1.Secret
-	err := c.Client.Get(ctx, client.ObjectKey{Name: secretName, Namespace: cluster.Namespace}, &existingSecret)
+	err := c.SecretCachingClient.Get(ctx, client.ObjectKey{Name: secretName, Namespace: cluster.Namespace}, &existingSecret)
 	if err == nil {
 		return string(existingSecret.Data["value"]), nil
 	} else if !apierrors.IsNotFound(err) {

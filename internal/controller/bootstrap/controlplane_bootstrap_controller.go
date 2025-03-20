@@ -59,9 +59,10 @@ import (
 
 type ControlPlaneController struct {
 	client.Client
-	Scheme     *runtime.Scheme
-	ClientSet  *kubernetes.Clientset
-	RESTConfig *rest.Config
+	SecretCachingClient client.Client
+	Scheme              *runtime.Scheme
+	ClientSet           *kubernetes.Clientset
+	RESTConfig          *rest.Config
 }
 
 const joinTokenFilePath = "/etc/k0s.token"
@@ -528,7 +529,7 @@ func (c *ControlPlaneController) getCerts(ctx context.Context, scope *Controller
 	})
 
 	s := &corev1.Secret{}
-	err := c.Client.Get(ctx, client.ObjectKey{Namespace: scope.Cluster.Namespace, Name: secret.Name(scope.Cluster.Name, secret.Kubeconfig)}, s)
+	err := c.SecretCachingClient.Get(ctx, client.ObjectKey{Namespace: scope.Cluster.Namespace, Name: secret.Name(scope.Cluster.Name, secret.Kubeconfig)}, s)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil, fmt.Errorf("cluster's kubeconfig secret not found, waiting for secret")
@@ -536,7 +537,7 @@ func (c *ControlPlaneController) getCerts(ctx context.Context, scope *Controller
 		return nil, nil, err
 	}
 
-	err = certificates.Lookup(ctx, c.Client, capiutil.ObjectKey(scope.Cluster))
+	err = certificates.LookupCached(ctx, c.SecretCachingClient, c.Client, capiutil.ObjectKey(scope.Cluster))
 	if err != nil {
 		return nil, nil, err
 	}
