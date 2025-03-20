@@ -143,10 +143,14 @@ func (c *ClusterSpec) GetImage() string {
 type ClusterStatus struct {
 	ReconciliationStatus string `json:"reconciliationStatus"`
 	Ready                bool   `json:"ready,omitempty"`
+	Replicas             int32  `json:"replicas,omitempty"`
+	// selector is the label selector for pods that should match the replicas count.
+	Selector string `json:"selector,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
 //+kubebuilder:resource:shortName=kmc
 
 // Cluster is the Schema for the k0smotronclusters API
