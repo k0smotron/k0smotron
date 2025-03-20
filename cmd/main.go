@@ -35,12 +35,15 @@ import (
 	"github.com/k0smotron/k0smotron/internal/controller/controlplane"
 	"github.com/k0smotron/k0smotron/internal/controller/infrastructure"
 	controller "github.com/k0smotron/k0smotron/internal/controller/k0smotron.io"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/selection"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -134,12 +137,22 @@ func main() {
 		metricsOpts.FilterProvider = filters.WithAuthenticationAndAuthorization
 	}
 
+	req, _ := labels.NewRequirement(clusterv1.ClusterNameLabel, selection.Exists, nil)
+	clusterSecretCacheSelector := labels.NewSelector().Add(*req)
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsOpts,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       fmt.Sprintf("%x.k0smotron.io", md5.Sum([]byte(enabledController))),
+		Cache: cache.Options{
+			ByObject: map[client.Object]cache.ByObject{
+				&corev1.Secret{}: {
+					Label: clusterSecretCacheSelector,
+				},
+			},
+		},
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -151,15 +164,15 @@ func main() {
 		// if you are doing or is intended to do any operation such as perform cleanups
 		// after the manager stops then its usage might be unsafe.
 		// LeaderElectionReleaseOnCancel: true,
-		Client: client.Options{
-			Cache: &client.CacheOptions{
-				DisableFor: []client.Object{
-					&corev1.ConfigMap{},
-					&corev1.Secret{},
-				},
-				Unstructured: true,
-			},
-		},
+		// Client: client.Options{
+		// 	Cache: &client.CacheOptions{
+		// 		DisableFor: []client.Object{
+		// 			&corev1.ConfigMap{},
+		// 			&corev1.Secret{},
+		// 		},
+		// 		Unstructured: true,
+		// 	},
+		// },
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
