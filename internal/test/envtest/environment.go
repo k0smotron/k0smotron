@@ -32,6 +32,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog/v2"
@@ -48,6 +50,7 @@ import (
 	"k8s.io/client-go/rest"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -62,6 +65,8 @@ var (
 		Jitter:   0.4,
 	}
 )
+
+type setupSecretCachingClientFn func(mgr manager.Manager) error
 
 // Environment encapsulates a Kubernetes local test environment.
 type Environment struct {
@@ -89,7 +94,7 @@ func init() {
 	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme.Scheme))
 }
 
-func newEnvironment() *Environment {
+func newEnvironment(setupSecretCachingClient setupSecretCachingClientFn) *Environment {
 	_, filename, _, _ := goruntime.Caller(0)
 	root := path.Join(path.Dir(filename), "..", "..", "..")
 
@@ -119,10 +124,20 @@ func newEnvironment() *Environment {
 		panic(err)
 	}
 
+	req, _ := labels.NewRequirement(clusterv1.ClusterNameLabel, selection.Exists, nil)
+	clusterSecretCacheSelector := labels.NewSelector().Add(*req)
+
 	options := manager.Options{
 		Scheme: scheme.Scheme,
 		Metrics: metricsserver.Options{
 			BindAddress: "0",
+		},
+		Cache: cache.Options{
+			ByObject: map[client.Object]cache.ByObject{
+				&v1.Secret{}: {
+					Label: clusterSecretCacheSelector,
+				},
+			},
 		},
 		Client: client.Options{
 			Cache: &client.CacheOptions{
@@ -139,6 +154,11 @@ func newEnvironment() *Environment {
 	mgr, err := ctrl.NewManager(env.Config, options)
 	if err != nil {
 		panic(fmt.Errorf("failed to start testenv manager: %w", err))
+	}
+
+	err = setupSecretCachingClient(mgr)
+	if err != nil {
+		panic(fmt.Errorf("failed to setup secret caching client: %w", err))
 	}
 
 	if kubeconfigPath := os.Getenv("TEST_ENV_KUBECONFIG"); kubeconfigPath != "" {
@@ -159,8 +179,8 @@ func newEnvironment() *Environment {
 	}
 }
 
-func Build(ctx context.Context) *Environment {
-	testEnv := newEnvironment()
+func Build(ctx context.Context, setupSecretCachingClient setupSecretCachingClientFn) *Environment {
+	testEnv := newEnvironment(setupSecretCachingClient)
 	go func() {
 		fmt.Println("Starting the manager")
 		if err := testEnv.StartManager(ctx); err != nil {

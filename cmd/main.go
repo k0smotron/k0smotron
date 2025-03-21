@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 
+	corev1 "k8s.io/api/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -34,13 +35,17 @@ import (
 	"github.com/k0smotron/k0smotron/internal/controller/controlplane"
 	"github.com/k0smotron/k0smotron/internal/controller/infrastructure"
 	controller "github.com/k0smotron/k0smotron/internal/controller/k0smotron.io"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/selection"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -131,23 +136,31 @@ func main() {
 		metricsOpts.FilterProvider = filters.WithAuthenticationAndAuthorization
 	}
 
+	req, _ := labels.NewRequirement(clusterv1.ClusterNameLabel, selection.Exists, nil)
+	clusterSecretCacheSelector := labels.NewSelector().Add(*req)
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsOpts,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       fmt.Sprintf("%x.k0smotron.io", md5.Sum([]byte(enabledController))),
-		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
-		// when the Manager ends. This requires the binary to immediately end when the
-		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
-		// speeds up voluntary leader transitions as the new leader don't have to wait
-		// LeaseDuration time first.
-		//
-		// In the default scaffold provided, the program ends immediately after
-		// the manager stops, so would be fine to enable this option. However,
-		// if you are doing or is intended to do any operation such as perform cleanups
-		// after the manager stops then its usage might be unsafe.
-		// LeaderElectionReleaseOnCancel: true,
+		Cache: cache.Options{
+			ByObject: map[client.Object]cache.ByObject{
+				&corev1.Secret{}: {
+					Label: clusterSecretCacheSelector,
+				},
+			},
+		},
+		Client: client.Options{
+			Cache: &client.CacheOptions{
+				DisableFor: []client.Object{
+					&corev1.ConfigMap{},
+					&corev1.Secret{},
+				},
+				Unstructured: true,
+			},
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -165,23 +178,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	secretCachingClient, err := client.New(mgr.GetConfig(), client.Options{
+		HTTPClient: mgr.GetHTTPClient(),
+		Cache: &client.CacheOptions{
+			Reader: mgr.GetCache(),
+		},
+	})
+	if err != nil {
+		setupLog.Error(err, "unable to create secret caching client")
+		os.Exit(1)
+	}
+
 	//+kubebuilder:scaffold:builder
 
 	if isControllerEnabled(bootstrapController) {
 		if err = (&bootstrap.Controller{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
+			Client:              mgr.GetClient(),
+			SecretCachingClient: secretCachingClient,
+			Scheme:              mgr.GetScheme(),
+			ClientSet:           clientSet,
+			RESTConfig:          restConfig,
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Bootstrap")
 			os.Exit(1)
 		}
 		if err = (&bootstrap.ControlPlaneController{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
+			Client:              mgr.GetClient(),
+			SecretCachingClient: secretCachingClient,
+			Scheme:              mgr.GetScheme(),
+			ClientSet:           clientSet,
+			RESTConfig:          restConfig,
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Bootstrap")
 			os.Exit(1)
@@ -229,9 +255,10 @@ func main() {
 		}
 
 		if err = (&controlplane.K0sController{
-			Client:     mgr.GetClient(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
+			Client:              mgr.GetClient(),
+			SecretCachingClient: secretCachingClient,
+			ClientSet:           clientSet,
+			RESTConfig:          restConfig,
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "K0sController")
 			os.Exit(1)

@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util"
@@ -37,7 +38,7 @@ import (
 
 func (r *ClusterReconciler) ensureEtcdCertificates(ctx context.Context, kmc *km.Cluster) error {
 	certificates := secret.NewCertificatesForInitialControlPlane(&bootstrapv1.ClusterConfiguration{})
-	err := certificates.Lookup(ctx, r.Client, util.ObjectKey(kmc))
+	err := certificates.LookupCached(ctx, r.SecretCachingClient, r.Client, util.ObjectKey(kmc))
 	if err != nil {
 		return fmt.Errorf("error looking up etcd certs: %w", err)
 	}
@@ -69,7 +70,7 @@ func (r *ClusterReconciler) ensureEtcdCertificates(ctx context.Context, kmc *km.
 		&secret.Certificate{Purpose: "etcd-peer"},
 	}
 
-	err = etcdCerts.Lookup(ctx, r.Client, util.ObjectKey(kmc))
+	err = etcdCerts.LookupCached(ctx, r.SecretCachingClient, r.Client, util.ObjectKey(kmc))
 	if err != nil {
 		return fmt.Errorf("error looking up etcd certs: %w", err)
 	}
