@@ -25,7 +25,6 @@ import (
 	goruntime "runtime"
 	"time"
 
-	"github.com/onsi/ginkgo/v2"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 
@@ -78,8 +77,6 @@ func init() {
 	log.SetLogger(logger)
 	// Additionally force all controllers to use the Ginkgo logger.
 	ctrl.SetLogger(logger)
-	// Add logger for ginkgo.
-	klog.SetOutput(ginkgo.GinkgoWriter)
 
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme.Scheme))
 	utilruntime.Must(clusterv1.AddToScheme(scheme.Scheme))
