@@ -1,0 +1,6 @@
+apiVersion: v2
+name: k0smotron
+description: A k0smotron Helm chart
+type: application
+version: 0.1.0
+appVersion: "1.4.0"
