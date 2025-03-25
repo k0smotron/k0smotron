@@ -2,9 +2,11 @@ package util
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -13,6 +15,8 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var ErrClusterConfigNotFound = errors.New("ClusterConfig not available yet")
 
 func ReconcileDynamicConfig(ctx context.Context, cluster metav1.Object, cli client.Client, u unstructured.Unstructured) error {
 	u.SetName("k0s")
@@ -45,6 +49,9 @@ func ReconcileDynamicConfig(ctx context.Context, cluster metav1.Object, cli clie
 		return chCS.Patch(ctx, &u, client.RawPatch(client.Merge.Type(), b), []client.PatchOption{}...)
 	})
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to patch k0s config: %w", ErrClusterConfigNotFound)
+		}
 		return fmt.Errorf("failed to patch k0s config: %w", err)
 	}
 

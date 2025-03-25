@@ -193,21 +193,6 @@ func (c *K0sController) Reconcile(ctx context.Context, req ctrl.Request) (res ct
 
 	log = log.WithValues("cluster", cluster.Name)
 
-	if err := c.ensureCertificates(ctx, cluster, kcp); err != nil {
-		log.Error(err, "Failed to ensure certificates")
-		return ctrl.Result{}, err
-	}
-
-	if err := c.reconcileTunneling(ctx, cluster, kcp); err != nil {
-		log.Error(err, "Failed to reconcile tunneling")
-		return ctrl.Result{}, err
-	}
-
-	if err := c.reconcileConfig(ctx, cluster, kcp); err != nil {
-		log.Error(err, "Failed to reconcile config")
-		return ctrl.Result{}, err
-	}
-
 	err = c.reconcile(ctx, cluster, kcp)
 	if err != nil {
 		if errors.Is(err, ErrNotReady) {
@@ -317,6 +302,18 @@ func (c *K0sController) reconcileKubeconfig(ctx context.Context, cluster *cluste
 }
 
 func (c *K0sController) reconcile(ctx context.Context, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0sControlPlane) error {
+	if err := c.ensureCertificates(ctx, cluster, kcp); err != nil {
+		return fmt.Errorf("failed to ensure certificates: %w", err)
+	}
+
+	if err := c.reconcileTunneling(ctx, cluster, kcp); err != nil {
+		return fmt.Errorf("failed to reconcile tunneling: %w", err)
+	}
+
+	if err := c.reconcileConfig(ctx, cluster, kcp); err != nil {
+		return fmt.Errorf("failed to reconcile config: %w", err)
+	}
+
 	var err error
 	kcp.Spec.K0sConfigSpec.K0s, err = enrichK0sConfigWithClusterData(cluster, kcp.Spec.K0sConfigSpec.K0s)
 	if err != nil {
@@ -671,11 +668,18 @@ func (c *K0sController) reconcileConfig(ctx context.Context, cluster *clusterv1.
 			}
 		}
 
-		// Reconcile the dynamic config
-		dErr := kutil.ReconcileDynamicConfig(ctx, cluster, c.Client, *kcp.Spec.K0sConfigSpec.K0s.DeepCopy())
-		if dErr != nil {
-			// Don't return error from dynamic config reconciliation, as it may not be created yet
-			log.Error(fmt.Errorf("failed to reconcile dynamic config, kubeconfig may not be available yet: %w", dErr), "Failed to reconcile dynamic config")
+		// Reconcile the dynamic config. The status must be Ready, denoting that the workload cluster API is available to modify
+		// the configuration dynamically.
+		if kcp.Status.Ready {
+			err := kutil.ReconcileDynamicConfig(ctx, cluster, c.Client, *kcp.Spec.K0sConfigSpec.K0s.DeepCopy())
+			if err != nil {
+				if errors.Is(err, kutil.ErrClusterConfigNotFound) {
+					log.Info("ClusterConfig is not available yet")
+					return fmt.Errorf("%v: %w", err, ErrNotReady)
+				}
+
+				return err
+			}
 		}
 	}
 
