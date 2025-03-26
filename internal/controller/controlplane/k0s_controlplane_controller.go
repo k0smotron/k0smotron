@@ -393,9 +393,12 @@ func (c *K0sController) reconcileMachines(ctx context.Context, cluster *clusterv
 	log.Log.Info("Collected machines", "count", activeMachines.Len(), "desired", kcp.Spec.Replicas, "updating", clusterIsUpdating, "deleting", len(machineNamesToDelete), "desiredMachines", desiredMachineNames)
 
 	go func() {
-		err = c.deleteOldControlNodes(ctx, cluster)
-		if err != nil {
-			logger.Error(err, "Error deleting old control nodes")
+		// The k8s API of the workload cluster must be available to make requests.
+		if kcp.Status.Ready {
+			err = c.deleteOldControlNodes(ctx, cluster)
+			if err != nil {
+				logger.Error(err, "Error deleting old control nodes")
+			}
 		}
 	}()
 
