@@ -24,7 +24,6 @@ import (
 	"os"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/tools/clientcmd"
 
 	bootstrapv1beta1 "github.com/k0smotron/k0smotron/api/bootstrap/v1beta1"
 	controlplanev1beta1 "github.com/k0smotron/k0smotron/api/controlplane/v1beta1"
@@ -38,9 +37,9 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -154,7 +153,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	restConfig, err := loadRestConfig()
+	restConfig, err := config.GetConfig()
 	if err != nil {
 		setupLog.Error(err, "unable to get cluster config")
 		os.Exit(1)
@@ -169,10 +168,9 @@ func main() {
 
 	if isControllerEnabled(bootstrapController) {
 		if err = (&bootstrap.Controller{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
+			Client:    mgr.GetClient(),
+			Scheme:    mgr.GetScheme(),
+			ClientSet: clientSet,
 		}).SetupWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Bootstrap")
 			os.Exit(1)
@@ -277,14 +275,6 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-// loadRestConfig loads the rest config from the KUBECONFIG env var or from the in-cluster config
-func loadRestConfig() (*rest.Config, error) {
-	if os.Getenv("KUBECONFIG") != "" {
-		return clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
-	}
-	return rest.InClusterConfig()
 }
 
 func isControllerEnabled(controllerName string) bool {

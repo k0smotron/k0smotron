@@ -28,7 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/utils/ptr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	bsutil "sigs.k8s.io/cluster-api/bootstrap/util"
@@ -56,9 +55,8 @@ const (
 
 type Controller struct {
 	client.Client
-	Scheme     *runtime.Scheme
-	ClientSet  *kubernetes.Clientset
-	RESTConfig *rest.Config
+	Scheme    *runtime.Scheme
+	ClientSet *kubernetes.Clientset
 	// workloadClusterClient is used during testing to inject a fake client
 	workloadClusterClient client.Client
 }
