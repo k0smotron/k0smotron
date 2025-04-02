@@ -457,6 +457,8 @@ func TestReconcileControlPlaneNotReady(t *testing.T) {
 	require.NoError(t, err)
 
 	cluster := newCluster(ns.Name)
+	// Cluster.Spec.ControlPlaneEndpoint is not set by infra provider
+	cluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{}
 	require.NoError(t, testEnv.Create(ctx, cluster))
 
 	machineForWorkerConfig := &clusterv1.Machine{
@@ -504,21 +506,14 @@ func TestReconcileControlPlaneNotReady(t *testing.T) {
 		assert.NoError(c, err)
 		assert.Equal(c, ctrl.Result{Requeue: true, RequeueAfter: time.Second * 5}, result)
 
-		// using a client directly from envtest will fail because the object is not synchronized with the API yet,
-		// so asserting something might fail.
-		uncachedClient, err := client.New(testEnv.Config, client.Options{Scheme: testEnv.GetScheme()})
-		assert.NoError(c, err)
-
 		updatedK0sWorkerConfig := &bootstrapv1.K0sWorkerConfig{}
-		assert.NoError(c, uncachedClient.Get(ctx, client.ObjectKeyFromObject(k0sWorkerConfig), updatedK0sWorkerConfig))
-
+		assert.NoError(c, testEnv.Get(ctx, client.ObjectKeyFromObject(k0sWorkerConfig), updatedK0sWorkerConfig))
 		assert.True(c, conditions.IsFalse(updatedK0sWorkerConfig, clusterv1.ReadyCondition))
-
 		assert.True(c, conditions.IsFalse(updatedK0sWorkerConfig, bootstrapv1.DataSecretAvailableCondition))
 		assert.Equal(c, bootstrapv1.WaitingForControlPlaneInitializationReason, conditions.GetReason(updatedK0sWorkerConfig, bootstrapv1.DataSecretAvailableCondition))
 		assert.Equal(c, clusterv1.ConditionSeverityInfo, *conditions.GetSeverity(updatedK0sWorkerConfig, bootstrapv1.DataSecretAvailableCondition))
 
-		// Cluster.Status.ControlPlaneReady is false
+		// Cluster.Spec.ControlPlaneEndpoint is set but Cluster.Status.ControlPlaneReady is false
 		cluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
 			Host: "http://test.host",
 			Port: 9999,
@@ -531,9 +526,7 @@ func TestReconcileControlPlaneNotReady(t *testing.T) {
 
 		updatedK0sWorkerConfig = &bootstrapv1.K0sWorkerConfig{}
 		assert.NoError(c, testEnv.Get(ctx, client.ObjectKeyFromObject(k0sWorkerConfig), updatedK0sWorkerConfig))
-
 		assert.True(c, conditions.IsFalse(updatedK0sWorkerConfig, clusterv1.ReadyCondition))
-
 		assert.True(c, conditions.IsFalse(updatedK0sWorkerConfig, bootstrapv1.DataSecretAvailableCondition))
 		assert.Equal(c, bootstrapv1.WaitingForControlPlaneInitializationReason, conditions.GetReason(updatedK0sWorkerConfig, bootstrapv1.DataSecretAvailableCondition))
 		assert.Equal(c, clusterv1.ConditionSeverityInfo, *conditions.GetSeverity(updatedK0sWorkerConfig, bootstrapv1.DataSecretAvailableCondition))
@@ -613,11 +606,13 @@ func TestReconcileGenerateBootstrapData(t *testing.T) {
 	)
 	require.NoError(t, testEnv.Create(ctx, caCertSecret))
 
-	// Cluster.Spec.ControlPlaneEndpoint is not initialize by infra provider
 	require.EventuallyWithT(t, func(c *assert.CollectT) {
 		result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: util.ObjectKey(k0sWorkerConfig)})
 		assert.NoError(c, err)
 		assert.Equal(c, ctrl.Result{}, result)
+
+		bootstrapSecret := &corev1.Secret{}
+		assert.NoError(c, testEnv.Get(ctx, client.ObjectKey{Namespace: k0sWorkerConfig.Namespace, Name: k0sWorkerConfig.Name}, bootstrapSecret))
 
 		updatedK0sWorkerConfig := &bootstrapv1.K0sWorkerConfig{}
 		assert.NoError(c, testEnv.Get(ctx, client.ObjectKeyFromObject(k0sWorkerConfig), updatedK0sWorkerConfig))
