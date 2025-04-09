@@ -41,8 +41,8 @@ import (
 var entrypointDefaultMode = int32(0744)
 
 const (
-	clusterLabel          = "k0smotron.io/cluster"
-	statefulSetAnnotation = "k0smotron.io/statefulset-hash"
+	clusterLabel              = "k0smotron.io/cluster"
+	statefulSetHashAnnotation = "k0smotron.io/statefulset-hash"
 )
 
 // findStatefulSetPod returns a first running pod from a StatefulSet
@@ -51,9 +51,26 @@ func (r *ClusterReconciler) findStatefulSetPod(ctx context.Context, statefulSet 
 }
 
 func (r *ClusterReconciler) generateStatefulSet(kmc *km.Cluster) (apps.StatefulSet, error) {
-
 	labels := kcontrollerutil.LabelsForK0smotronControlPlane(kmc)
+
+	configMap := &v1.ConfigMap{}
+	err := r.Client.Get(
+		context.Background(),
+		client.ObjectKey{Namespace: kmc.Namespace, Name: kmc.GetConfigMapName()},
+		configMap,
+	)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return apps.StatefulSet{}, fmt.Errorf("configmap %s missing", kmc.GetConfigMapName())
+		}
+
+		return apps.StatefulSet{}, fmt.Errorf("failed to get configmap %s: %w", kmc.GetConfigMapName(), err)
+	}
 	annotations := kcontrollerutil.AnnotationsForK0smotronCluster(kmc)
+	if annotations == nil {
+		annotations = make(map[string]string, 1)
+	}
+	annotations[kmc.GetConfigMapChecksumAnnotationName()] = configMap.Annotations[kmc.GetConfigMapChecksumAnnotationName()]
 
 	statefulSet := apps.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -311,10 +328,10 @@ data:
 		ReadOnly:  true,
 	})
 
-	err := ctrl.SetControllerReference(kmc, &statefulSet, r.Scheme)
+	err = ctrl.SetControllerReference(kmc, &statefulSet, r.Scheme)
 
 	statefulSet.Annotations = map[string]string{
-		statefulSetAnnotation: controller.ComputeHash(&statefulSet.Spec.Template, statefulSet.Status.CollisionCount),
+		statefulSetHashAnnotation: controller.ComputeHash(&statefulSet.Spec.Template, statefulSet.Status.CollisionCount),
 	}
 	for k, v := range annotations {
 		statefulSet.Annotations[k] = v
@@ -559,7 +576,7 @@ func (r *ClusterReconciler) reconcileStatefulSet(ctx context.Context, kmc *km.Cl
 
 func isStatefulSetsEqual(new, old *apps.StatefulSet) bool {
 	return *new.Spec.Replicas == *old.Spec.Replicas &&
-		new.Annotations[statefulSetAnnotation] == old.Annotations[statefulSetAnnotation] &&
+		new.Annotations[statefulSetHashAnnotation] == old.Annotations[statefulSetHashAnnotation] &&
 		reflect.DeepEqual(new.Spec.Selector, old.Spec.Selector) &&
 		equality.Semantic.DeepDerivative(new.Spec.VolumeClaimTemplates, old.Spec.VolumeClaimTemplates)
 
