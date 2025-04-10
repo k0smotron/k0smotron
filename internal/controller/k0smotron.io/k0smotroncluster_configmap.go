@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sort"
 	"strings"
 
 	"github.com/imdario/mergo"
@@ -221,6 +222,9 @@ func (r *ClusterReconciler) genSANs(kmc *km.Cluster) ([]string, error) {
 	// Trim the trailing dot from the CNAME
 	trimmedCNAME, _ := strings.CutSuffix(cname, ".")
 	sans = append(sans, trimmedCNAME)
+
+	// Sort the sans to ensure stable output order
+	sort.Strings(sans)
 
 	return sans, nil
 }
