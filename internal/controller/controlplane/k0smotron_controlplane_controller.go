@@ -293,6 +293,7 @@ func (c *K0smotronController) reconcile(ctx context.Context, cluster *clusterv1.
 			Labels: map[string]string{
 				clusterv1.ClusterNameLabel: cluster.Name,
 			},
+			Annotations: kcp.Annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: cpv1beta1.GroupVersion.String(),
