@@ -133,7 +133,7 @@ spec:
                 - key: node.cloudprovider.kubernetes.io/uninitialized
                   value: "true"
                   effect: NoSchedule
-              nodeSelector: {} 
+              nodeSelector: ""
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackCluster
