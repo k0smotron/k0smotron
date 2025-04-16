@@ -18,7 +18,7 @@ where deploying the new control plane is followed by decommissioning of the old 
 
 1. Check the configuration of deployed k0smotron cluster in your repository. For example:
 
-    ```yaml 
+    ```yaml
     apiVersion: cluster.x-k8s.io/v1beta1
     kind: Cluster
     metadata:
@@ -48,8 +48,22 @@ where deploying the new control plane is followed by decommissioning of the old 
       name: docker-test-cp
     spec:
       replicas: 3
-      version: v1.28.7+k0s.0
+      version: v1.31.1+k0s.0
       updateStrategy: InPlace
+      k0sConfigSpec:
+        args:
+          - --enable-worker
+        k0s:
+          apiVersion: k0s.k0sproject.io/v1beta1
+          kind: ClusterConfig
+          metadata:
+            name: k0s
+          spec:
+            api:
+              extraArgs:
+                anonymous-auth: "true" # anonymous-auth=true is needed for k0s to allow unauthorized health-checks on /healthz
+            telemetry:
+              enabled: true
       machineTemplate:
         infrastructureRef:
           apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -76,8 +90,22 @@ where deploying the new control plane is followed by decommissioning of the old 
      name: docker-test-cp
    spec:
      replicas: 3
-     version: v1.29.2+k0s.0 # updated version
+     version: v1.31.2+k0s.0 # updated version
      updateStrategy: InPlace
+     k0sConfigSpec:
+      args:
+        - --enable-worker
+      k0s:
+        apiVersion: k0s.k0sproject.io/v1beta1
+        kind: ClusterConfig
+        metadata:
+          name: k0s
+        spec:
+          api:
+            extraArgs:
+              anonymous-auth: "true" # anonymous-auth=true is needed for k0s to allow unauthorized health-checks on /healthz
+          telemetry:
+            enabled: true
      machineTemplate:
        infrastructureRef:
          apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -94,19 +122,19 @@ where deploying the new control plane is followed by decommissioning of the old 
 
 ## Updating the control plane using the Cluster API workflow
 
-In case `K0sControlPlane` is created with `spec.updateStrategy=Recreate`, k0smotron uses the Cluster API workflow to update the control plane, 
+In case `K0sControlPlane` is created with `spec.updateStrategy=Recreate`, k0smotron uses the Cluster API workflow to update the control plane,
 which involves creating a new machines for control plane and decommissioning the old ones.
 
 !!! warning
 
-    The `Recreate` update strategy is not supported for k0s clusters running in `--single` mode. 
+    The `Recreate` update strategy is not supported for k0s clusters running in `--single` mode.
 
 For the example below, k0smotron will create 3 new machines for the control plane, ensure that the new control plane nodes are online, and then remove the old machines.
 
 
 1. Check the configuration of deployed k0smotron cluster in your repository. For example:
 
-    ```yaml 
+    ```yaml
     apiVersion: cluster.x-k8s.io/v1beta1
     kind: Cluster
     metadata:
@@ -136,8 +164,22 @@ For the example below, k0smotron will create 3 new machines for the control plan
       name: docker-test-cp
     spec:
       replicas: 3
-      version: v1.28.7+k0s.0
+      version: v1.31.1+k0s.0
       updateStrategy: Recreate
+      k0sConfigSpec:
+        args:
+          - --enable-worker
+        k0s:
+          apiVersion: k0s.k0sproject.io/v1beta1
+          kind: ClusterConfig
+          metadata:
+            name: k0s
+          spec:
+            api:
+              extraArgs:
+                anonymous-auth: "true" # anonymous-auth=true is needed for k0s to allow unauthorized health-checks on /healthz
+            telemetry:
+              enabled: true
       machineTemplate:
         infrastructureRef:
           apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
@@ -164,7 +206,7 @@ For the example below, k0smotron will create 3 new machines for the control plan
      name: docker-test-cp
    spec:
      replicas: 3
-     version: v1.29.2+k0s.0 # updated version
+     version: v1.31.2+k0s.0 # updated version
      updateStrategy: Recreate
      machineTemplate:
        infrastructureRef:
