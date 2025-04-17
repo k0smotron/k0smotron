@@ -41,7 +41,7 @@ providers:
   - name: k0sproject-k0smotron
     type: ControlPlaneProvider
     versions:
-      - name: v1.4.1
+      - name: v1.5.0
         value: ../../config/default
         contract: v1beta1
         files:
@@ -54,7 +54,7 @@ providers:
   - name: k0sproject-k0smotron
     type: BootstrapProvider
     versions:
-      - name: v1.4.1
+      - name: v1.5.0
         value: ../../config/default
         contract: v1beta1
         files:
