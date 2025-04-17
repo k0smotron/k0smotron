@@ -67,49 +67,35 @@ to prevent data loss. For example:
      version: v1.28.7-k0s.0 # new k0s version
    ```
 
-4. In the same configuration, replace the names of machines running the old k0smotron version
-with the new names to create machines for the target k0smotron version. For example:
+4. Create a new version of the K0sWorkerConfigTemplate For example:
 
    ```yaml
    ---
-   apiVersion: cluster.x-k8s.io/v1beta1
-   kind: Machine
-   metadata:
-     name:  docker-test-1 # new machine
-     namespace: default
-   spec:
-     version: v1.28.7 # new version
-     clusterName: docker-test
-     bootstrap:
-       configRef:
-         apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-         kind: K0sWorkerConfig
-         name: docker-test-1 # new machine
-     infrastructureRef:
-       apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-       kind: DockerMachine
-       name: docker-test-1 # new machine
-   ---
-   apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-   kind: K0sWorkerConfig
-   metadata:
-     name: docker-test-1 # new machine
-     namespace: default
-   spec:
-     version: v1.28.7+k0s.0 # new version
+    apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+    kind: K0sWorkerConfigTemplate
+    metadata:
+      name: docker-test-1 # New name
+      namespace: default
+    spec:
+      template:
+        spec:
+          args:
+          - --enable-cloud-provider
+          - --kubelet-extra-args="--cloud-provider=external"
+          version: v1.28.7+k0s.0 # new k0s version
    ```
- 
-5. Update the resources:
-
-   ```bash
-   kubectl apply -f ./path-to-file.yaml
-   ```
-
-   
-6. Remove the machines running the old k0smotron version:
-
-   ```bash
-   kubectl delete machine docker-test-0
-   ```
-   
+5. Edit the MachineDeployment with the new version of the K0sWorkerConfigTemplate start the rollout:
+ ```yaml
+    ---
+    apiVersion: cluster.x-k8s.io/v1beta1
+    kind: MachineDeployment
+    {.....}
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: K0sWorkerConfigTemplate
+          name: docker-test-1
+          namespace: default
+```
 The update procedure is completed, you now have the target version of k0smotron.
