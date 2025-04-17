@@ -539,14 +539,22 @@ func (r *ClusterReconciler) reconcileStatefulSet(ctx context.Context, kmc *km.Cl
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 
+	selector, err := metav1.LabelSelectorAsSelector(statefulSet.Spec.Selector)
+	if err != nil {
+		return fmt.Errorf("error retrieving StatefulSet labels: %w", err)
+	}
+	kmc.Status.Selector = selector.String()
+
 	foundStatefulSet, err := r.ClientSet.AppsV1().StatefulSets(statefulSet.Namespace).Get(ctx, statefulSet.Name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
+		kmc.Status.Replicas = 0
 		return r.Client.Patch(ctx, &statefulSet, client.Apply, patchOpts...)
 	} else if err == nil {
 		if !isStatefulSetsEqual(&statefulSet, foundStatefulSet) {
 			return r.Client.Patch(ctx, &statefulSet, client.Apply, patchOpts...)
 		}
 
+		kmc.Status.Replicas = foundStatefulSet.Status.Replicas
 		if foundStatefulSet.Status.ReadyReplicas == kmc.Spec.Replicas {
 			kmc.Status.Ready = true
 		}

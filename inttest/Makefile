@@ -41,7 +41,7 @@ clean:
 
 check-scaling-etcd: TIMEOUT=10m
 check-monitoring: TIMEOUT=7m
-check-ha-controlplane: TIMEOUT=7m
+check-ha-controller: TIMEOUT=7m
 check-pvc: TIMEOUT=15m
 check-pvc: LOCAL_STORAGE_INSTALL_YAML=$(realpath ./footloose-alpine/seaweedfs.yaml)
 check-capi-controlplane-docker-tunneling: TIMEOUT=10m

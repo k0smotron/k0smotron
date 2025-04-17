@@ -50,7 +50,11 @@ func (r *ClusterReconciler) reconcileControlPlanePVC(ctx context.Context, kmc *k
 }
 
 func (r *ClusterReconciler) reconcileEtcdPVC(ctx context.Context, kmc *km.Cluster) error {
-	return r.resizeStatefulSetAndPVC(ctx, kmc, kmc.Spec.Etcd.Persistence.Size, calculateDesiredReplicas(kmc), kmc.GetEtcdStatefulSetName(), "etcd-data")
+	foundStatefulSet, err := r.ClientSet.AppsV1().StatefulSets(kmc.Namespace).Get(ctx, kmc.GetEtcdStatefulSetName(), metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get StatefulSet %s: %w", kmc.GetEtcdStatefulSetName(), err)
+	}
+	return r.resizeStatefulSetAndPVC(ctx, kmc, kmc.Spec.Etcd.Persistence.Size, calculateDesiredReplicas(kmc, foundStatefulSet), kmc.GetEtcdStatefulSetName(), "etcd-data")
 }
 
 func (r *ClusterReconciler) resizeStatefulSetAndPVC(ctx context.Context, kmc *km.Cluster, desiredStorageSize resource.Quantity, replicas int32, stsName, vctName string) error {
