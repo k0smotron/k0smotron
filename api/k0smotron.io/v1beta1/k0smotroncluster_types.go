@@ -354,6 +354,10 @@ func (kmc *Cluster) GetConfigMapName() string {
 	return kmc.getObjectName("kmc-%s-config")
 }
 
+func (kmc *Cluster) GetConfigMapChecksumAnnotationName() string {
+	return "checksum/configmap"
+}
+
 func (kmc *Cluster) GetServiceName() string {
 	switch kmc.Spec.Service.Type {
 	case v1.ServiceTypeNodePort:

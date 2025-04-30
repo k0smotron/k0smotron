@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cloudflare/cfssl/scan/crypto/sha256"
 	"github.com/imdario/mergo"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -93,6 +94,17 @@ func (r *ClusterReconciler) generateConfig(kmc *km.Cluster, sans []string) (v1.C
 		return v1.ConfigMap{}, nil, err
 	}
 
+	annotations := kcontrollerutil.AnnotationsForK0smotronCluster(kmc)
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+
+	hash := sha256.New()
+	_, err = hash.Write(b)
+	if err != nil {
+		return v1.ConfigMap{}, nil, fmt.Errorf("failed to hash configmap: %w", err)
+	}
+	annotations[kmc.GetConfigMapChecksumAnnotationName()] = fmt.Sprintf("%x", hash.Sum(nil))
 	cm := v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -102,7 +114,7 @@ func (r *ClusterReconciler) generateConfig(kmc *km.Cluster, sans []string) (v1.C
 			Name:        kmc.GetConfigMapName(),
 			Namespace:   kmc.Namespace,
 			Labels:      kcontrollerutil.LabelsForK0smotronCluster(kmc),
-			Annotations: kcontrollerutil.AnnotationsForK0smotronCluster(kmc),
+			Annotations: annotations,
 		},
 		Data: map[string]string{
 			"K0SMOTRON_K0S_YAML": string(b),
