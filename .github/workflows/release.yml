@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload Release Assets - metadata.yaml
         id: upload-release-asset-metadata
-        uses: shogo82148/actions-upload-release-asset@v1.7.8
+        uses: shogo82148/actions-upload-release-asset@v1.8.0
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./metadata.yaml
@@ -96,7 +96,7 @@ jobs:
 
       - name: Upload Release Assets - bootstrap-components.yaml
         id: upload-release-asset-bootstrap
-        uses: shogo82148/actions-upload-release-asset@v1.7.8
+        uses: shogo82148/actions-upload-release-asset@v1.8.0
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./bootstrap-components.yaml
@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload Release Assets - control-plane-components.yaml
         id: upload-release-asset-control-plane
-        uses: shogo82148/actions-upload-release-asset@v1.7.8
+        uses: shogo82148/actions-upload-release-asset@v1.8.0
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./control-plane-components.yaml
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload Release Assets - infrastructure-components.yaml
         id: upload-release-asset-images
-        uses: shogo82148/actions-upload-release-asset@v1.7.8
+        uses: shogo82148/actions-upload-release-asset@v1.8.0
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./infrastructure-components.yaml
