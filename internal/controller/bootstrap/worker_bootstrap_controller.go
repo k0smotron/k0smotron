@@ -185,17 +185,31 @@ func (r *Controller) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.
 	}
 
 	// Create the secret containing the bootstrap data
+
+	// Copy labels from K0sWorkerConfig
+	labels := map[string]string{}
+	for k, v := range scope.Config.Labels {
+		labels[k] = v
+	}
+	// Ensure cluster-name label is always present
+	labels[clusterv1.ClusterNameLabel] = scope.Cluster.Name
+
+	// Copy annotations from K0sWorkerConfig
+	annotations := map[string]string{}
+	for k, v := range scope.Config.Annotations {
+		annotations[k] = v
+	}
+
 	bootstrapSecret := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Secret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      config.Name,
-			Namespace: config.Namespace,
-			Labels: map[string]string{
-				clusterv1.ClusterNameLabel: scope.Cluster.Name,
-			},
+			Name:        config.Name,
+			Namespace:   config.Namespace,
+			Labels:      labels,
+			Annotations: annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: bootstrapv1.GroupVersion.String(),

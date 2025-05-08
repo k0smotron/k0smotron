@@ -630,3 +630,115 @@ func TestReconcileGenerateBootstrapData(t *testing.T) {
 		}
 	}, 20*time.Second, 100*time.Millisecond)
 }
+
+func TestReconcileCopyLabelsAndAnnotations(t *testing.T) {
+	t.Parallel()
+
+	// Create a new namespace for isolation
+	ns, err := testEnv.CreateNamespace(ctx, "test-reconcile-workerconfig-copy-metadata")
+	require.NoError(t, err)
+
+	// Create a cluster
+	cluster := newCluster(ns.Name)
+	require.NoError(t, testEnv.Create(ctx, cluster))
+
+	// Mark control plane ready so bootstrap can proceed
+	cluster.Status.ControlPlaneReady = true
+	require.NoError(t, testEnv.Status().Update(ctx, cluster))
+
+	// Create a Machine as the owner of the K0sWorkerConfig
+	machineForWorkerConfig := &clusterv1.Machine{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-%d", "machine-for-worker", 0),
+			Namespace: ns.Name,
+			Labels: map[string]string{
+				clusterv1.ClusterNameLabel: cluster.Name,
+			},
+		},
+		Spec: clusterv1.MachineSpec{
+			ClusterName: cluster.Name,
+			Version:     ptr.To("v1.30.0"),
+		},
+	}
+	require.NoError(t, testEnv.Create(ctx, machineForWorkerConfig))
+
+	// Create a K0sWorkerConfig with a custom label and annotation
+	k0sWorkerConfig := &bootstrapv1.K0sWorkerConfig{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: bootstrapv1.GroupVersion.String(),
+			Kind:       "K0sWorkerConfig",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "worker-config",
+			Namespace: ns.Name,
+			Labels: map[string]string{
+				"custom-label": "foo",
+			},
+			Annotations: map[string]string{
+				"custom-anno": "bar",
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Kind:       "Machine",
+					APIVersion: clusterv1.GroupVersion.String(),
+					Name:       machineForWorkerConfig.Name,
+					UID:        "1",
+				},
+			},
+		},
+	}
+	require.NoError(t, testEnv.Create(ctx, k0sWorkerConfig))
+
+	// Ensure cleanup after test
+	defer func(do ...client.Object) {
+		require.NoError(t, testEnv.Cleanup(ctx, do...))
+	}(k0sWorkerConfig, cluster, machineForWorkerConfig, ns)
+
+	// Prepare the Reconciler
+	workloadClient, _ := fakeremote.NewClusterClient(ctx, "", testEnv, types.NamespacedName{})
+	r := &Controller{
+		Client:                testEnv,
+		workloadClusterClient: workloadClient,
+		SecretCachingClient:   secretCachingClient,
+	}
+
+	// We also need a valid CA secret for the bootstrap logic to succeed
+	// (makes sure the worker can generate a join token).
+	kcp := &cpv1beta1.K0sControlPlane{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "my-kcp",
+			UID:  "1",
+		},
+	}
+	clusterCerts := secret.NewCertificatesForInitialControlPlane(&kubeadmbootstrapv1.ClusterConfiguration{})
+	require.NoError(t, clusterCerts.Generate())
+	caCert := clusterCerts.GetByPurpose(secret.ClusterCA)
+	caCertSecret := caCert.AsSecret(
+		client.ObjectKey{Namespace: cluster.Namespace, Name: cluster.Name},
+		*metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0sControlPlane")),
+	)
+	require.NoError(t, testEnv.Create(ctx, caCertSecret))
+
+	require.EventuallyWithT(t, func(c *assert.CollectT) {
+		// Run the Reconcile
+		result, err := r.Reconcile(ctx, ctrl.Request{NamespacedName: util.ObjectKey(k0sWorkerConfig)})
+		assert.NoError(c, err)
+		assert.Equal(c, ctrl.Result{}, result)
+
+		// Fetch the generated Secret
+		secretObj := &corev1.Secret{}
+		err = testEnv.Get(ctx, client.ObjectKey{Name: k0sWorkerConfig.Name, Namespace: ns.Name}, secretObj)
+		assert.NoError(c, err, "bootstrap secret should have been created")
+
+		// Labels: ensure custom label plus the cluster name label
+		assert.Equal(c, "foo", secretObj.Labels["custom-label"])
+		assert.Equal(c, cluster.Name, secretObj.Labels[clusterv1.ClusterNameLabel])
+
+		// Annotation: ensure custom annotation is copied
+		assert.Equal(c, "bar", secretObj.Annotations["custom-anno"])
+
+		// (Optional) If you want to check that the data was populated:
+		// assert.NotEmpty(c, secretObj.Data["value"])
+
+	}, 15*time.Second, 250*time.Millisecond)
+}
