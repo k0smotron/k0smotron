@@ -42,7 +42,8 @@ func TestCloudInit(t *testing.T) {
 	}
 
 	s := string(b)
-	assert.Equal(t, `#cloud-config
+	assert.Equal(t, `## template: jinja
+#cloud-config
 write_files:
   - path: /etc/hosts
     content: foobar
@@ -75,7 +76,8 @@ func TestCustomCloudInit(t *testing.T) {
 	}
 
 	s := string(b)
-	assert.Equal(t, `#cloud-config
+	assert.Equal(t, `## template: jinja
+#cloud-config
 write_files:
   - path: /etc/hosts
     content: foobar

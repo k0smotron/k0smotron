@@ -41,7 +41,11 @@ func (c *CloudInit) AsBytes() ([]byte, error) {
 	var b bytes.Buffer
 
 	// Write the "header" first
-	_, err := b.WriteString("#cloud-config\n")
+	_, err := b.WriteString("## template: jinja\n")
+	if err != nil {
+		return nil, err
+	}
+	_, err = b.WriteString("#cloud-config\n")
 	if err != nil {
 		return nil, err
 	}
