@@ -1041,8 +1041,12 @@ func TestReconcileMachinesScaleUp(t *testing.T) {
 	})
 	restClient.Client = fakeClient.Client
 
+	clientSet, err := kubernetes.NewForConfig(testEnv.Config)
+	require.NoError(t, err)
+
 	r := &K0sController{
 		Client:                    testEnv,
+		ClientSet:                 clientSet,
 		workloadClusterKubeClient: kubernetes.New(restClient),
 	}
 
@@ -1096,8 +1100,12 @@ func TestReconcileMachinesScaleDown(t *testing.T) {
 	})
 	restClient.Client = fakeClient.Client
 
+	clientSet, err := kubernetes.NewForConfig(testEnv.Config)
+	require.NoError(t, err)
+
 	r := &K0sController{
 		Client:                    testEnv,
+		ClientSet:                 clientSet,
 		workloadClusterKubeClient: kubernetes.New(restClient),
 	}
 

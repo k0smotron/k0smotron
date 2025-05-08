@@ -30,6 +30,7 @@ smoketests := \
     check-capi-remote-machine-job-provision \
     check-capi-remote-machine-template \
     check-capi-remote-machine-template-update \
+    check-capi-docker-machine-change-args \
     check-capi-docker-machine-change-template \
     check-capi-docker-machine-template-update \
     check-capi-docker-machine-template-update-recreate \
