@@ -9,3 +9,17 @@ metadata:
     app.kubernetes.io/created-by: k0smotron
   name: sample
 spec:
+  # Example etcd configuration
+  etcd:
+    # Default etcd image to use (required)
+    image: quay.io/k0sproject/etcd:v3.5.13
+    # etcd persistence settings
+    persistence: {}
+    # Specify resource requests and limits for etcd
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi

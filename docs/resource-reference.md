@@ -3622,6 +3622,13 @@ Etcd defines the etcd configuration.
           Persistence defines the persistence configuration.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespecetcdresources">resources</a></b></td>
+        <td>object</td>
+        <td>
+          Resources defines the compute resource requirements for the etcd container.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -3715,6 +3722,88 @@ Persistence defines the persistence configuration.
           StorageClass defines the storage class to be used for etcd persistence. If empty, will be used the default storage class.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.etcd.resources
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecetcd)</sup></sup>
+
+
+
+Resources defines the compute resource requirements for the etcd container.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanespecetcdresourcesclaimsindex">claims</a></b></td>
+        <td>[]object</td>
+        <td>
+          Claims lists the names of resources, defined in spec.resourceClaims,
+that are used by this container.
+
+
+This is an alpha field and requires enabling the
+DynamicResourceAllocation feature gate.
+
+
+This field is immutable. It can only be set for containers.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>limits</b></td>
+        <td>map[string]int or string</td>
+        <td>
+          Limits describes the maximum amount of compute resources allowed.
+More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>requests</b></td>
+        <td>map[string]int or string</td>
+        <td>
+          Requests describes the minimum amount of compute resources required.
+If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+otherwise to an implementation-defined value. Requests cannot exceed Limits.
+More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.etcd.resources.claims[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespecetcdresources)</sup></sup>
+
+
+
+ResourceClaim references one entry in PodSpec.ResourceClaims.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name must match the name of one entry in pod.spec.resourceClaims of
+the Pod where this field is used. It makes that resource available
+inside a container.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -12852,6 +12941,13 @@ Etcd defines the etcd configuration.
           Persistence defines the persistence configuration.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecetcdresources">resources</a></b></td>
+        <td>object</td>
+        <td>
+          Resources defines the compute resource requirements for the etcd container.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -12945,6 +13041,88 @@ Persistence defines the persistence configuration.
           StorageClass defines the storage class to be used for etcd persistence. If empty, will be used the default storage class.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.etcd.resources
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecetcd)</sup></sup>
+
+
+
+Resources defines the compute resource requirements for the etcd container.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespecetcdresourcesclaimsindex">claims</a></b></td>
+        <td>[]object</td>
+        <td>
+          Claims lists the names of resources, defined in spec.resourceClaims,
+that are used by this container.
+
+
+This is an alpha field and requires enabling the
+DynamicResourceAllocation feature gate.
+
+
+This field is immutable. It can only be set for containers.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>limits</b></td>
+        <td>map[string]int or string</td>
+        <td>
+          Limits describes the maximum amount of compute resources allowed.
+More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>requests</b></td>
+        <td>map[string]int or string</td>
+        <td>
+          Requests describes the minimum amount of compute resources required.
+If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+otherwise to an implementation-defined value. Requests cannot exceed Limits.
+More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.etcd.resources.claims[index]
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespecetcdresources)</sup></sup>
+
+
+
+ResourceClaim references one entry in PodSpec.ResourceClaims.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name must match the name of one entry in pod.spec.resourceClaims of
+the Pod where this field is used. It makes that resource available
+inside a container.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -39020,6 +39198,13 @@ Etcd defines the etcd configuration.
           Persistence defines the persistence configuration.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#clusterspecetcdresources">resources</a></b></td>
+        <td>object</td>
+        <td>
+          Resources defines the compute resource requirements for the etcd container.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -39113,6 +39298,88 @@ Persistence defines the persistence configuration.
           StorageClass defines the storage class to be used for etcd persistence. If empty, will be used the default storage class.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.etcd.resources
+<sup><sup>[↩ Parent](#clusterspecetcd)</sup></sup>
+
+
+
+Resources defines the compute resource requirements for the etcd container.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#clusterspecetcdresourcesclaimsindex">claims</a></b></td>
+        <td>[]object</td>
+        <td>
+          Claims lists the names of resources, defined in spec.resourceClaims,
+that are used by this container.
+
+
+This is an alpha field and requires enabling the
+DynamicResourceAllocation feature gate.
+
+
+This field is immutable. It can only be set for containers.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>limits</b></td>
+        <td>map[string]int or string</td>
+        <td>
+          Limits describes the maximum amount of compute resources allowed.
+More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>requests</b></td>
+        <td>map[string]int or string</td>
+        <td>
+          Requests describes the minimum amount of compute resources required.
+If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+otherwise to an implementation-defined value. Requests cannot exceed Limits.
+More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.etcd.resources.claims[index]
+<sup><sup>[↩ Parent](#clusterspecetcdresources)</sup></sup>
+
+
+
+ResourceClaim references one entry in PodSpec.ResourceClaims.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name must match the name of one entry in pod.spec.resourceClaims of
+the Pod where this field is used. It makes that resource available
+inside a container.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 

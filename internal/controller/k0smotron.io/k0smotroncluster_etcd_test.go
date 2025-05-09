@@ -17,11 +17,14 @@ limitations under the License.
 package k0smotronio
 
 import (
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	km "github.com/k0smotron/k0smotron/api/k0smotron.io/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func TestEtcd_calculateDesiredReplicas(t *testing.T) {
@@ -41,6 +44,77 @@ func TestEtcd_calculateDesiredReplicas(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			got := calculateDesiredReplicas(tc.cluster)
 			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestEtcd_resourceRequirements(t *testing.T) {
+	tests := []struct {
+		name    string
+		cluster *km.Cluster
+		want    func(t *testing.T, resources corev1.ResourceRequirements)
+	}{
+		{
+			name:    "Default - No resources specified",
+			cluster: &km.Cluster{}, // No Resources specified
+			want: func(t *testing.T, resources corev1.ResourceRequirements) {
+				assert.Empty(t, resources.Requests)
+				assert.Empty(t, resources.Limits)
+			},
+		},
+		{
+			name: "Resources specified - Requests only",
+			cluster: &km.Cluster{
+				Spec: km.ClusterSpec{
+					Etcd: km.EtcdSpec{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("128Mi"),
+							},
+						},
+					},
+				},
+			},
+			want: func(t *testing.T, resources corev1.ResourceRequirements) {
+				assert.Equal(t, resource.MustParse("100m"), *resources.Requests.Cpu())
+				assert.Equal(t, resource.MustParse("128Mi"), *resources.Requests.Memory())
+				assert.Empty(t, resources.Limits)
+			},
+		},
+		{
+			name: "Resources specified - Requests and limits",
+			cluster: &km.Cluster{
+				Spec: km.ClusterSpec{
+					Etcd: km.EtcdSpec{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("128Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("200m"),
+								corev1.ResourceMemory: resource.MustParse("256Mi"),
+							},
+						},
+					},
+				},
+			},
+			want: func(t *testing.T, resources corev1.ResourceRequirements) {
+				assert.Equal(t, resource.MustParse("100m"), *resources.Requests.Cpu())
+				assert.Equal(t, resource.MustParse("128Mi"), *resources.Requests.Memory())
+				assert.Equal(t, resource.MustParse("200m"), *resources.Limits.Cpu())
+				assert.Equal(t, resource.MustParse("256Mi"), *resources.Limits.Memory())
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := new(ClusterReconciler)
+			sts := r.generateEtcdStatefulSet(tc.cluster, nil, 1)
+			resources := sts.Spec.Template.Spec.Containers[0].Resources
+			tc.want(t, resources)
 		})
 	}
 }

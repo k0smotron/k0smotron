@@ -99,7 +99,12 @@ func (s *CAPIDockerMachineTemplateUpdateRecreate) TestCAPIControlPlaneDockerDown
 	var localPort int
 	// nolint:staticcheck
 	err := wait.PollImmediateUntilWithContext(s.ctx, 1*time.Second, func(ctx context.Context) (bool, error) {
-		localPort, _ = getLBPort("docker-test-lb")
+		var portErr error
+		localPort, portErr = getLBPort("docker-test-lb")
+		if portErr != nil {
+			s.T().Logf("Waiting for load balancer port: %v", portErr)
+			return false, nil
+		}
 		return localPort > 0, nil
 	})
 	s.Require().NoError(err)
@@ -204,7 +209,12 @@ func getLBPort(name string) (int, error) {
 		return 0, fmt.Errorf("failed to unmarshal inspect info from container %s: %w", name, err)
 	}
 
-	return strconv.Atoi(ports["6443/tcp"][0]["HostPort"])
+	tcpPorts, ok := ports["6443/tcp"]
+	if !ok || len(tcpPorts) == 0 {
+		return 0, fmt.Errorf("no port mappings found for 6443/tcp in container %s", name)
+	}
+
+	return strconv.Atoi(tcpPorts[0]["HostPort"])
 }
 
 var dockerClusterYaml = `

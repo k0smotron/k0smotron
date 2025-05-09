@@ -345,6 +345,7 @@ func (r *ClusterReconciler) generateEtcdStatefulSet(kmc *km.Cluster, existingSts
 							{Name: "ETCDCTL_KEY", Value: "/var/lib/k0s/pki/etcd/server.key"},
 							{Name: "ETCD_INITIAL_CLUSTER", Value: r.initialCluster(kmc, replicas)},
 						},
+						Resources: kmc.Spec.Etcd.Resources,
 						ReadinessProbe: &v1.Probe{
 							ProbeHandler: v1.ProbeHandler{
 								Exec: &v1.ExecAction{
@@ -484,7 +485,7 @@ etcd --name ${HOSTNAME} \
 {{- range $arg := .Args }}
   {{ $arg }} \
 {{- end }}
-  --data-dir=/var/lib/k0s/etcd 
+  --data-dir=/var/lib/k0s/etcd
 `
 
 var initEntryScript = `

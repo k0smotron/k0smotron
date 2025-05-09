@@ -278,6 +278,9 @@ type EtcdSpec struct {
 	// DefragJob defines the etcd defragmentation job configuration.
 	//+kubebuilder:validation:Optional
 	DefragJob DefragJob `json:"defragJob"`
+	// Resources defines the compute resource requirements for the etcd container.
+	//+kubebuilder:validation:Optional
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type DefragJob struct {
