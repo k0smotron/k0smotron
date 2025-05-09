@@ -1023,8 +1023,8 @@ func machineName(kcp *cpv1beta1.K0sControlPlane, machineToDelete, desiredMachine
 // SetupWithManager sets up the controller with the Manager.
 func (c *K0sController) SetupWithManager(mgr ctrl.Manager) error {
 	// Check if the cluster.x-k8s.io API is available and if not, don't try to watch for Machine objects
-	_, err := c.RESTMapper().KindsFor(schema.GroupVersionResource{Group: "cluster.x-k8s.io", Version: "v1beta1"})
-	if errors.Is(err, &meta.NoResourceMatchError{}) {
+	kinds, err := c.RESTMapper().KindsFor(schema.GroupVersionResource{Group: "cluster.x-k8s.io", Version: "v1beta1"})
+	if meta.IsNoMatchError(err) || len(kinds) == 0 {
 		return ctrl.NewControllerManagedBy(mgr).
 			For(&cpv1beta1.K0sControlPlane{}).
 			Complete(c)
