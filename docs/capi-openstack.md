@@ -99,20 +99,59 @@ spec:
     type: LoadBalancer
     apiPort: 6443
     konnectivityPort: 8132
+  k0sConfig:
+    apiVersion: k0s.k0sproject.io/v1beta1
+    kind: ClusterConfig
+    spec:
+      network:
+        provider: calico # Optional but it works out-of-the-box with default managed SG...
+      extensions:
+        helm:
+          repositories:
+          - name: cpo
+            url: https://kubernetes.github.io/cloud-provider-openstack
+          charts:
+          - name: openstack-ccm
+            chartname: cpo/openstack-cloud-controller-manager
+            namespace: default
+            version: v2.31.0 # Version depends on which k8s you are on
+            values: |
+              cloudConfig:
+                global: #Compile as the same as clouds.yaml
+                  auth-url: 
+                  username: 
+                  password: 
+                  tenant-name: 
+                  domain-name: 
+                  region: 
+                networking:
+                loadBalancer:
+                  floating-network-id: # Needed for using openstack LB inside the cluster
+              cluster:
+                name: k0smotron-cluster
+              tolerations: #Cluster won't be Ready until OCCM isn't installed, need to add toleration and remove control-plane nodeselector
+                - key: node.cloudprovider.kubernetes.io/uninitialized
+                  value: "true"
+                  effect: NoSchedule
+              nodeSelector: ""
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha7
 kind: OpenStackCluster
 metadata:
   name: cluster-openstack
   namespace: default
-  annotations:
-    cluster.x-k8s.io/managed-by: k0smotron # This marks the base infra to be self managed. The value of the annotation is irrelevant, as long as there is a value.
 spec:
   cloudName: openstack
+  externalNetworkId: # Needed for HCP loadbalancer
+  apiServerLoadBalancer:
+    enabled: false
+  disableAPIServerFloatingIP: true
+  apiServerFixedIP: ""
   identityRef:
     kind: Secret
     name: cluster-openstack-cloud-config
-  nodeCidr: a.b.c.d/24 #This node cidr corresponds to a network already created in OpenStack
+  managedSecurityGroups: true #Optional defaults are calico SG
+  nodeCidr: a.b.c.d/24 # Cluster-api will create network and router by itself
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
@@ -171,15 +210,12 @@ spec:
         name: cluster-openstack-cloud-config
       image: ubuntu-20.04 # your image
       sshKeyName: rsa2 # your RSA key name
-      ports:
-      - network:
-          id: YourNetworkID # this corresponds to the network with the cidr provided above a.b.c.d/24
-```
-
-As we are using self-managed infrastructure we need to manually mark the infrastructure ready. This can be accomplished using the following command:
-
-``` sh
-kubectl patch OpenStackCluster cluster-openstack --type=merge --subresource status --patch 'status: {ready: true}'.
+      securityGroups: #Optional to add security group
+        - name: Calico
+      rootVolume: # Mandatory to create boot disk
+        availabilityZone: nova
+        diskSize: 50
+        volumeType: default
 ```
 After applying the manifests to the management cluster and confirming the infrastructure readiness, allow a few minutes for all components to provision. Once complete, your command line should display output similar to this:
 
