@@ -12,8 +12,8 @@ providers:
   - name: cluster-api
     type: CoreProvider
     versions:
-      - name: v1.8.5
-        value: https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.8.5/core-components.yaml
+      - name: "{go://sigs.k8s.io/cluster-api@v1.8}"
+        value: https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.8}/core-components.yaml
         type: url
         contract: v1beta1
         files:
@@ -24,8 +24,8 @@ providers:
   - name: docker
     type: InfrastructureProvider
     versions:
-      - name: v1.8.1
-        value: https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.8.1/infrastructure-components-development.yaml
+      - name: "{go://sigs.k8s.io/cluster-api@v1.8}"
+        value: https://github.com/kubernetes-sigs/cluster-api/releases/download/{go://sigs.k8s.io/cluster-api@v1.8}/infrastructure-components-development.yaml
         type: url
         contract: v1beta1
         files:
@@ -41,7 +41,25 @@ providers:
   - name: k0sproject-k0smotron
     type: ControlPlaneProvider
     versions:
-      - name: v1.5.0
+      - name: "{go://github.com/k0sproject/k0smotron@v1.4}"
+        value: https://github.com/k0sproject/k0smotron/releases/download/{go://github.com/k0sproject/k0smotron@v1.4}/control-plane-components.yaml
+        type: url
+        contract: v1beta1
+        files:
+          - sourcePath: "../../metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+      - name: "{go://github.com/k0sproject/k0smotron@v1.5}"
+        value: https://github.com/k0sproject/k0smotron/releases/download/{go://github.com/k0sproject/k0smotron@v1.5}/control-plane-components.yaml
+        type: url
+        contract: v1beta1
+        files:
+          - sourcePath: "../../metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+      - name: v1.5.99 # potentially next release. Manifest from source files (development) are used.
         value: ../../config/default
         contract: v1beta1
         files:
@@ -50,11 +68,29 @@ providers:
           - old: "imagePullPolicy: Always"
             new: "imagePullPolicy: IfNotPresent"
           - old: "image: k0s/k0smotron:latest"
-            new: "image: quay.io/k0sproject/k0smotron:latest"
+            new: "image: quay.io/k0sproject/k0smotron:latest" # For local testing, this image needs to be built before run e2e by using `make docker-build`
   - name: k0sproject-k0smotron
     type: BootstrapProvider
     versions:
-      - name: v1.5.0
+      - name: "{go://github.com/k0sproject/k0smotron@v1.4}"
+        value: https://github.com/k0sproject/k0smotron/releases/download/{go://github.com/k0sproject/k0smotron@v1.4}/bootstrap-components.yaml
+        type: url
+        contract: v1beta1
+        files:
+          - sourcePath: "../../metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+      - name: "{go://github.com/k0sproject/k0smotron@v1.5}"
+        value: https://github.com/k0sproject/k0smotron/releases/download/{go://github.com/k0sproject/k0smotron@v1.5}/bootstrap-components.yaml
+        type: url
+        contract: v1beta1
+        files:
+          - sourcePath: "../../metadata.yaml"
+        replacements:
+          - old: "imagePullPolicy: Always"
+            new: "imagePullPolicy: IfNotPresent"
+      - name: v1.5.99 # potentially next release. Manifest from source files (development) are used.
         value: ../../config/default
         contract: v1beta1
         files:

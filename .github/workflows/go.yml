@@ -185,6 +185,7 @@ jobs:
           - workload-cluster-recreate-upgrade
           - admission-webhook-t1
           - admission-webhook-t2
+          - k0smotron-upgrade
 
     steps:
       - name: Check out code into the Go module directory

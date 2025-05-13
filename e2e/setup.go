@@ -83,10 +83,10 @@ var (
 
 	// managementClusterProvider manages provisioning of the bootstrap cluster to be used for the e2e tests.
 	// Please note that provisioning will be skipped if e2e.use-existing-cluster is provided.
-	managementClusterProvider bootstrap.ClusterProvider
+	bootstrapClusterProvider bootstrap.ClusterProvider
 
 	// managementClusterProxy allows to interact with the management cluster to be used for the e2e tests.
-	managementClusterProxy capiframework.ClusterProxy
+	bootstrapClusterProxy capiframework.ClusterProxy
 )
 
 func init() {
@@ -100,6 +100,12 @@ func setupAndRun(t *testing.T, test func(t *testing.T)) {
 	ctrl.SetLogger(klog.Background())
 	flag.Parse()
 
+	defer func() {
+		if !skipCleanup {
+			tearDown(bootstrapClusterProvider, bootstrapClusterProxy)
+		}
+	}()
+
 	// On the k0smotron side we avoid using Gomega for assertions but since we want to use the
 	// cluster-api framework as much as possible, the framework assertions require registering
 	// a fail handler beforehand.
@@ -111,12 +117,6 @@ func setupAndRun(t *testing.T, test func(t *testing.T)) {
 	if err != nil {
 		panic(err)
 	}
-
-	defer func() {
-		if !skipCleanup {
-			tearDown(managementClusterProvider, managementClusterProxy)
-		}
-	}()
 
 	test(t)
 }
@@ -144,7 +144,7 @@ func setupMothership() error {
 
 	kubeconfigPath := ""
 	if !useExistingCluster {
-		managementClusterProvider = bootstrap.CreateKindBootstrapClusterAndLoadImages(ctx, bootstrap.CreateKindBootstrapClusterAndLoadImagesInput{
+		bootstrapClusterProvider = bootstrap.CreateKindBootstrapClusterAndLoadImages(ctx, bootstrap.CreateKindBootstrapClusterAndLoadImagesInput{
 			Name:               e2eConfig.ManagementClusterName,
 			Images:             e2eConfig.Images,
 			KubernetesVersion:  e2eConfig.GetVariable(KubernetesVersionManagement),
@@ -152,21 +152,21 @@ func setupMothership() error {
 			IPFamily:           e2eConfig.GetVariable(IPFamily),
 			LogFolder:          filepath.Join(artifactFolder, "kind"),
 		})
-		if managementClusterProvider == nil {
+		if bootstrapClusterProvider == nil {
 			return errors.New("failed to create a management cluster")
 		}
-		kubeconfigPath = managementClusterProvider.GetKubeconfigPath()
+		kubeconfigPath = bootstrapClusterProvider.GetKubeconfigPath()
 	} else {
 		fmt.Println("Using an existing bootstrap cluster")
 	}
 
-	managementClusterProxy = capiframework.NewClusterProxy("bootstrap", kubeconfigPath, scheme, framework.WithMachineLogCollector(framework.DockerLogCollector{}))
-	if managementClusterProxy == nil {
+	bootstrapClusterProxy = capiframework.NewClusterProxy("bootstrap", kubeconfigPath, scheme, framework.WithMachineLogCollector(framework.DockerLogCollector{}))
+	if bootstrapClusterProxy == nil {
 		return errors.New("failed to get a management cluster proxy")
 	}
 
 	err = mothership.InitAndWatchControllerLogs(watchesCtx, clusterctl.InitManagementClusterAndWatchControllerLogsInput{
-		ClusterProxy:             managementClusterProxy,
+		ClusterProxy:             bootstrapClusterProxy,
 		ClusterctlConfigPath:     clusterctlConfigPath,
 		InfrastructureProviders:  e2eConfig.InfrastructureProviders(),
 		DisableMetricsCollection: true,
