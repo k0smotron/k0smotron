@@ -174,6 +174,7 @@ func (c *ControlPlaneController) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
+	oldConfig := config.DeepCopy()
 	defer func() {
 		// Always report the status of the bootsrap data secret generation.
 		conditions.SetSummary(config,
@@ -181,7 +182,7 @@ func (c *ControlPlaneController) Reconcile(ctx context.Context, req ctrl.Request
 				bootstrapv1.DataSecretAvailableCondition,
 			),
 		)
-
+		config.Spec = oldConfig.Spec
 		err := patchHelper.Patch(ctx, config)
 		if err != nil {
 			log.Error(err, "Failed to patch K0sControllerConfig status")
@@ -208,7 +209,7 @@ func (c *ControlPlaneController) Reconcile(ctx context.Context, req ctrl.Request
 	}
 	scope.machines = machines
 
-	bootstrapData, err := c.generataBootsrapDataForController(ctx, log, scope)
+	bootstrapData, err := c.generateBootstrapDataForController(ctx, log, scope)
 	if err != nil {
 		// if the bootstrap data generation corresponds to a controller that is not the initial one, it is common to try to obtain
 		// the IP of the first controller when has not yet been surfaced. This is required to create a join token. It is needed to
@@ -267,7 +268,7 @@ func (c *ControlPlaneController) Reconcile(ctx context.Context, req ctrl.Request
 	return ctrl.Result{}, nil
 }
 
-func (c *ControlPlaneController) generataBootsrapDataForController(ctx context.Context, log logr.Logger, scope *ControllerScope) ([]byte, error) {
+func (c *ControlPlaneController) generateBootstrapDataForController(ctx context.Context, log logr.Logger, scope *ControllerScope) ([]byte, error) {
 	var (
 		files      []cloudinit.File
 		installCmd string

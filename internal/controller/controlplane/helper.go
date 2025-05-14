@@ -19,6 +19,7 @@ package controlplane
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -38,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	bootstrapv1 "github.com/k0smotron/k0smotron/api/bootstrap/v1beta1"
 	cpv1beta1 "github.com/k0smotron/k0smotron/api/controlplane/v1beta1"
 )
 
@@ -154,6 +156,22 @@ func (c *K0sController) getInfraMachines(ctx context.Context, machines collectio
 	return result, nil
 }
 
+func (c *K0sController) getBootstrapConfigs(ctx context.Context, machines collections.Machines) (map[string]bootstrapv1.K0sControllerConfig, error) {
+	result := map[string]bootstrapv1.K0sControllerConfig{}
+	for _, m := range machines {
+		var b bootstrapv1.K0sControllerConfig
+		err := c.Client.Get(ctx, client.ObjectKey{Namespace: m.Namespace, Name: m.Name}, &b)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			return nil, fmt.Errorf("failed to retrieve bootstrap data for machine object %s: %w", m.Name, err)
+		}
+		result[m.Name] = b
+	}
+	return result, nil
+}
+
 func (c *K0sController) createMachineFromTemplate(ctx context.Context, name string, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0sControlPlane) (*unstructured.Unstructured, error) {
 	infraMachine, err := c.generateMachineFromTemplate(ctx, name, cluster, kcp)
 	if err != nil {
@@ -264,6 +282,34 @@ func (c *K0sController) generateMachineFromTemplate(ctx context.Context, name st
 	infraMachine.SetKind(strings.TrimSuffix(infraMachineTemplate.GetKind(), clusterv1.TemplateSuffix))
 
 	return infraMachine, nil
+}
+
+func (c *K0sController) hasControllerConfigChanged(bootstrapConfigs map[string]bootstrapv1.K0sControllerConfig, kcp *cpv1beta1.K0sControlPlane, machine *clusterv1.Machine) bool {
+	// Skip the check if the K0sControlPlane is not ready
+	if !kcp.Status.Ready || kcp.Spec.Replicas != kcp.Status.Replicas {
+		return false
+	}
+
+	if machine == nil {
+		return false
+	}
+
+	if machine.Status.Phase != string(clusterv1.MachinePhaseRunning) &&
+		machine.Status.Phase != string(clusterv1.MachinePhaseProvisioned) &&
+		machine.Status.Phase != string(clusterv1.MachinePhaseProvisioning) {
+		return false
+	}
+
+	bootstrapConfig, found := bootstrapConfigs[machine.Name]
+	if !found {
+		return false
+	}
+
+	// k0s config will be reconciled using dynamic config, so leave it out of the comparison
+	bootstrapConfig.Spec.K0sConfigSpec.K0s = kcp.Spec.K0sConfigSpec.K0s
+	// leave out the tunneling spec for the bootstrap config
+	bootstrapConfig.Spec.K0sConfigSpec.Tunneling = kcp.Spec.K0sConfigSpec.Tunneling
+	return !reflect.DeepEqual(kcp.Spec.K0sConfigSpec, *bootstrapConfig.Spec.K0sConfigSpec)
 }
 
 func matchesTemplateClonedFrom(infraMachines map[string]*unstructured.Unstructured, kcp *cpv1beta1.K0sControlPlane, machine *clusterv1.Machine) bool {
