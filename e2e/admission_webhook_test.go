@@ -20,13 +20,14 @@ package e2e
 
 import (
 	"fmt"
+	"path/filepath"
+	"testing"
+
 	"github.com/k0smotron/k0smotron/e2e/util"
 	"github.com/stretchr/testify/require"
 	"k8s.io/utils/ptr"
-	"path/filepath"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	capiutil "sigs.k8s.io/cluster-api/util"
-	"testing"
 )
 
 func TestAdmissionWebhookT1(t *testing.T) {
@@ -41,13 +42,13 @@ func admissionWebhookSpecT1(t *testing.T) {
 	testName := "admission-webhook-t1"
 
 	// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
-	namespace, _ := util.SetupSpecNamespace(ctx, testName, managementClusterProxy, artifactFolder)
+	namespace, _ := util.SetupSpecNamespace(ctx, testName, bootstrapClusterProxy, artifactFolder)
 
 	clusterName := fmt.Sprintf("%s-%s", testName, capiutil.RandomString(6))
 
 	workloadClusterTemplate := clusterctl.ConfigCluster(ctx, clusterctl.ConfigClusterInput{
 		ClusterctlConfigPath: clusterctlConfigPath,
-		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
+		KubeconfigPath:       bootstrapClusterProxy.GetKubeconfigPath(),
 		// select cluster templates
 		Flavor: "admission-webhook-t1",
 
@@ -57,7 +58,7 @@ func admissionWebhookSpecT1(t *testing.T) {
 		ControlPlaneMachineCount: ptr.To[int64](3),
 		// TODO: make infra provider configurable
 		InfrastructureProvider: "docker",
-		LogFolder:              filepath.Join(artifactFolder, "clusters", managementClusterProxy.GetName()),
+		LogFolder:              filepath.Join(artifactFolder, "clusters", bootstrapClusterProxy.GetName()),
 		ClusterctlVariables: map[string]string{
 			"CLUSTER_NAME":    clusterName,
 			"NAMESPACE":       namespace.Name,
@@ -66,7 +67,7 @@ func admissionWebhookSpecT1(t *testing.T) {
 	})
 	require.NotNil(t, workloadClusterTemplate)
 
-	err := managementClusterProxy.CreateOrUpdate(ctx, workloadClusterTemplate)
+	err := bootstrapClusterProxy.CreateOrUpdate(ctx, workloadClusterTemplate)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "UpdateStrategy Recreate strategy is not allowed when the cluster is running in single mode")
 }
@@ -75,13 +76,13 @@ func admissionWebhookSpecT2(t *testing.T) {
 	testName := "admission-webhook-t2"
 
 	// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
-	namespace, _ := util.SetupSpecNamespace(ctx, testName, managementClusterProxy, artifactFolder)
+	namespace, _ := util.SetupSpecNamespace(ctx, testName, bootstrapClusterProxy, artifactFolder)
 
 	clusterName := fmt.Sprintf("%s-%s", testName, capiutil.RandomString(6))
 
 	workloadClusterTemplate := clusterctl.ConfigCluster(ctx, clusterctl.ConfigClusterInput{
 		ClusterctlConfigPath: clusterctlConfigPath,
-		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
+		KubeconfigPath:       bootstrapClusterProxy.GetKubeconfigPath(),
 		// select cluster templates
 		Flavor: "admission-webhook-t2",
 
@@ -91,7 +92,7 @@ func admissionWebhookSpecT2(t *testing.T) {
 		ControlPlaneMachineCount: ptr.To[int64](3),
 		// TODO: make infra provider configurable
 		InfrastructureProvider: "docker",
-		LogFolder:              filepath.Join(artifactFolder, "clusters", managementClusterProxy.GetName()),
+		LogFolder:              filepath.Join(artifactFolder, "clusters", bootstrapClusterProxy.GetName()),
 		ClusterctlVariables: map[string]string{
 			"CLUSTER_NAME":    clusterName,
 			"NAMESPACE":       namespace.Name,
@@ -100,7 +101,7 @@ func admissionWebhookSpecT2(t *testing.T) {
 	})
 	require.NotNil(t, workloadClusterTemplate)
 
-	err := managementClusterProxy.CreateOrUpdate(ctx, workloadClusterTemplate)
+	err := bootstrapClusterProxy.CreateOrUpdate(ctx, workloadClusterTemplate)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "version v1.31.1+k0s.0 is not compatible with K0sControlPlane, use v1.31.2+")
 }
