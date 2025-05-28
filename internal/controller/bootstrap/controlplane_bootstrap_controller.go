@@ -28,7 +28,6 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -703,11 +702,11 @@ func (c *ControlPlaneController) findFirstControllerIP(ctx context.Context, firs
 		if found {
 			for _, addr := range addresses {
 				addrMap, _ := addr.(map[string]interface{})
-				if addrMap["type"] == string(v1.NodeExternalIP) {
+				if addrMap["type"] == string(corev1.NodeExternalIP) {
 					extAddr = addrMap["address"].(string)
 					break
 				}
-				if addrMap["type"] == string(v1.NodeInternalIP) {
+				if addrMap["type"] == string(corev1.NodeInternalIP) {
 					ip, err := netip.ParseAddr(addrMap["address"].(string))
 					if err != nil {
 						continue
