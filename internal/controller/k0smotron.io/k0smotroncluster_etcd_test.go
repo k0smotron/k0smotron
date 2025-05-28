@@ -42,7 +42,7 @@ func TestEtcd_calculateDesiredReplicas(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run("", func(t *testing.T) {
-			got := calculateDesiredReplicas(tc.cluster)
+			got := calculateDesiredReplicas(tc.cluster, nil)
 			assert.Equal(t, tc.want, got)
 		})
 	}

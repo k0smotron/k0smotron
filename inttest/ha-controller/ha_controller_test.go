@@ -139,7 +139,7 @@ func (s *HAControllerSuite) getPod(ctx context.Context, kc *kubernetes.Clientset
 		ctx,
 		metav1.ListOptions{FieldSelector: "status.phase=Running"})
 	s.Require().NoError(err, "failed to list kmc-test pods")
-	s.Require().Equal(3, len(pods.Items), "expected 1 kmc-test pod, got %d", len(pods.Items))
+	s.Require().Equal(3, len(pods.Items), "expected 3 kmc-test pod, got %d", len(pods.Items))
 
 	return pods.Items[2]
 }

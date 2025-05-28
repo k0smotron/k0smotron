@@ -408,6 +408,14 @@ rules:
 - apiGroups:
   - k0smotron.io
   resources:
+  - clusters/scale
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k0smotron.io
+  resources:
   - clusters/status
   verbs:
   - get

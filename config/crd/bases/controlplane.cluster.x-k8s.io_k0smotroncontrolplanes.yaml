@@ -4609,6 +4609,10 @@ spec:
                   control plane
                 format: int32
                 type: integer
+              selector:
+                description: selector is the label selector for pods that should match
+                  the replicas count.
+                type: string
               unavailableReplicas:
                 description: |-
                   unavailableReplicas is the total number of unavailable pods targeted by this control plane.

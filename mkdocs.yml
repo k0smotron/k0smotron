@@ -21,6 +21,7 @@ nav:
       - Configuration: configuration.md
       - Etcd configuration: etcd.md
       - HA control planes with Kine: ha.md
+      - Autoscaling: hcp-autoscaling.md
     - Cluster API:
       - Overview: cluster-api.md
       - Control Plane: capi-controlplane.md
