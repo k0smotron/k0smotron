@@ -394,6 +394,23 @@ func (c *K0smotronController) ensureCertificates(ctx context.Context, cluster *c
 	return certificates.LookupOrGenerateCached(ctx, c.SecretCachingClient, c.Client, capiutil.ObjectKey(cluster), *metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0smotronControlPlane")))
 }
 
+// FormatStatusVersion formats the status version to match the spec version format.
+// If spec.version doesn't contain "-k0s." suffix, it removes the suffix from status.version as well.
+func FormatStatusVersion(specVersion, statusVersion string) string {
+	specHasK0sSuffix := strings.Contains(specVersion, "-k0s.")
+
+	// Adjust status.version to match the format of spec.version
+	if !specHasK0sSuffix && strings.Contains(statusVersion, "-k0s.") {
+		// If spec.version doesn't have the -k0s. suffix, remove it from status.version as well
+		parts := strings.Split(statusVersion, "-k0s.")
+		if len(parts) > 0 {
+			return parts[0]
+		}
+	}
+
+	return statusVersion
+}
+
 func (c *K0smotronController) computeStatus(ctx context.Context, cluster types.NamespacedName, kcp *cpv1beta1.K0smotronControlPlane) error {
 	var kmc kapi.Cluster
 	err := c.Client.Get(ctx, cluster, &kmc)
@@ -468,7 +485,8 @@ func (c *K0smotronController) computeStatus(ctx context.Context, cluster types.N
 	kcp.Status.UnavailableReplicas = int32(unavailableReplicas)
 
 	if kcp.Status.ReadyReplicas > 0 {
-		kcp.Status.Version = minimumVersion.String()
+		statusVersion := minimumVersion.String()
+		kcp.Status.Version = FormatStatusVersion(kcp.Spec.Version, statusVersion)
 	}
 
 	// if no replicas are yet available or the desired version is not in the current state of the
