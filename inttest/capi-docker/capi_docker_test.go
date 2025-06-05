@@ -187,6 +187,7 @@ func (s *CAPIDockerSuite) checkControlPlaneStatus(ctx context.Context, rc *rest.
 	crdRestClient, err := rest.UnversionedRESTClientFor(&crdConfig)
 	s.Require().NoError(err)
 
+	var finalKcp controlplanev1beta1.K0smotronControlPlane
 	err = wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (bool, error) {
 		var kcp controlplanev1beta1.K0smotronControlPlane
 		err = crdRestClient.
@@ -197,10 +198,18 @@ func (s *CAPIDockerSuite) checkControlPlaneStatus(ctx context.Context, rc *rest.
 			Do(ctx).
 			Into(&kcp)
 
+		finalKcp = kcp
 		return kcp.Status.Ready, nil
 	})
 
 	s.Require().NoError(err)
+
+	// Verify version format in status
+	// spec.version is v1.31.2 (without -k0s suffix), so status.version should also be v1.31.2
+	s.T().Logf("K0smotronControlPlane status.version: %s", finalKcp.Status.Version)
+	s.T().Logf("K0smotronControlPlane status.k0sVersion: %s", finalKcp.Status.K0sVersion)
+	s.Require().Equal("v1.31.2", finalKcp.Status.Version, "status.version should match spec.version format without -k0s suffix")
+	s.Require().Contains(finalKcp.Status.K0sVersion, "-k0s.", "status.k0sVersion should contain the full k0s version with -k0s suffix")
 }
 
 func (s *CAPIDockerSuite) checkClusterIDAnnotation(ctx context.Context) {
@@ -258,7 +267,7 @@ kind: K0smotronControlPlane
 metadata:
   name: docker-test-cp
 spec:
-  version: v1.31.2-k0s.0
+  version: v1.31.2
   certificateRefs:
     - name: docker-test-ca
       type: ca
