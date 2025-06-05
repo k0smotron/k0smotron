@@ -18,6 +18,7 @@ package capidockermachinedeployment
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"testing"
@@ -33,6 +34,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+
+	cpv1beta1 "github.com/k0sproject/k0smotron/api/controlplane/v1beta1"
 )
 
 type CAPIDockerSuite struct {
@@ -66,9 +69,20 @@ func (s *CAPIDockerSuite) SetupSuite() {
 }
 
 func (s *CAPIDockerSuite) TestCAPIDocker() {
+	// Test with k0s suffix (default/backward compatible)
+	s.Run("WithK0sSuffix", func() {
+		s.testCAPIDockerWithVersion("docker-md-test", "v1.27.2-k0s.0", "../../config/samples/capi/docker/cluster-with-machinedeployment.yaml", true)
+	})
 
+	// Test without k0s suffix
+	s.Run("WithoutK0sSuffix", func() {
+		s.testCAPIDockerWithVersion("docker-md-test-no-suffix", "v1.27.2", "../../config/samples/capi/docker/cluster-with-machinedeployment-no-suffix.yaml", false)
+	})
+}
+
+func (s *CAPIDockerSuite) testCAPIDockerWithVersion(clusterName, expectedVersion, yamlPath string, expectK0sSuffix bool) {
 	// Apply the child cluster objects
-	s.applyClusterObjects()
+	s.applyClusterObjects(yamlPath)
 	defer func() {
 		keep := os.Getenv("KEEP_AFTER_TEST")
 		if keep == "true" {
@@ -78,16 +92,20 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 			return
 		}
 		s.T().Log("Deleting cluster objects")
-		s.Require().NoError(util.DeleteCluster("docker-md-test"))
+		s.Require().NoError(util.DeleteCluster(clusterName))
 	}()
 	s.T().Log("cluster objects applied, waiting for cluster to be ready")
 
 	// Wait for the cluster to be ready
 	// Wait to see the CP pods ready
-	s.Require().NoError(util.WaitForStatefulSet(s.ctx, s.client, "kmc-docker-md-test", "default"))
+	s.Require().NoError(util.WaitForStatefulSet(s.ctx, s.client, fmt.Sprintf("kmc-%s", clusterName), "default"))
+
+	// Verify K0smotronControlPlane version format
+	s.T().Log("Verifying K0smotronControlPlane version format")
+	s.verifyK0smotronControlPlaneVersionFormat(clusterName, expectedVersion, expectK0sSuffix)
 
 	s.T().Log("Starting portforward")
-	fw, err := util.GetPortForwarder(s.restConfig, "kmc-docker-md-test-0", "default", 30443)
+	fw, err := util.GetPortForwarder(s.restConfig, fmt.Sprintf("kmc-%s-0", clusterName), "default", 30443)
 	s.Require().NoError(err)
 
 	go fw.Start(s.Require().NoError)
@@ -98,8 +116,8 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 	localPort, err := fw.LocalPort()
 	s.Require().NoError(err)
 	s.T().Log("waiting to see admin kubeconfig secret")
-	s.Require().NoError(util.WaitForSecret(s.ctx, s.client, "docker-md-test-kubeconfig", "default"))
-	kmcKC, err := util.GetKMCClientSet(s.ctx, s.client, "docker-md-test", "default", localPort)
+	s.Require().NoError(util.WaitForSecret(s.ctx, s.client, fmt.Sprintf("%s-kubeconfig", clusterName), "default"))
+	kmcKC, err := util.GetKMCClientSet(s.ctx, s.client, clusterName, "default", localPort)
 	s.Require().NoError(err)
 
 	s.T().Log("waiting for 2 nodes to be ready")
@@ -129,8 +147,7 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 	s.Require().NoError(err)
 	// Check that the MD gets to ready state
 	s.T().Log("waiting for machinedeployment to be ready")
-	// nolint:staticcheck
-	s.Require().NoError(wait.PollImmediateUntilWithContext(ctx, 1*time.Second, func(ctx context.Context) (done bool, err error) {
+	s.Require().NoError(wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		// Get the MachineDeployment
 		md := &clusterv1.MachineDeployment{}
 		err = s.client.RESTClient().
@@ -138,7 +155,7 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 			AbsPath("/apis/cluster.x-k8s.io/v1beta1").
 			Resource("machinedeployments").
 			Namespace("default").
-			Name("docker-md-test").
+			Name(clusterName).
 			Do(ctx).Into(md)
 		if err != nil {
 			return false, err
@@ -150,8 +167,77 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 	}))
 }
 
-func (s *CAPIDockerSuite) applyClusterObjects() {
+func (s *CAPIDockerSuite) applyClusterObjects(yamlPath string) {
 	// Exec via kubectl
-	out, err := exec.Command("kubectl", "apply", "-f", "../../config/samples/capi/docker/cluster-with-machinedeployment.yaml").CombinedOutput()
+	out, err := exec.Command("kubectl", "apply", "-f", yamlPath).CombinedOutput()
 	s.Require().NoError(err, "failed to apply cluster objects: %s", string(out))
+}
+
+// getK0smotronControlPlaneStatus retrieves the K0smotronControlPlane status
+func (s *CAPIDockerSuite) getK0smotronControlPlaneStatus(name, namespace string) (*cpv1beta1.K0smotronControlPlaneStatus, error) {
+	kcp := &cpv1beta1.K0smotronControlPlane{}
+	err := s.client.RESTClient().
+		Get().
+		AbsPath("/apis/controlplane.cluster.x-k8s.io/v1beta1").
+		Resource("k0smotroncontrolplanes").
+		Namespace(namespace).
+		Name(name).
+		Do(s.ctx).Into(kcp)
+	if err != nil {
+		return nil, err
+	}
+	return &kcp.Status, nil
+}
+
+// verifyK0smotronControlPlaneVersionFormat verifies that the version format is consistent
+func (s *CAPIDockerSuite) verifyK0smotronControlPlaneVersionFormat(clusterName, expectedSpecVersion string, expectK0sSuffix bool) {
+	ctx, cancel := context.WithTimeout(s.ctx, 2*time.Minute)
+	defer cancel()
+
+	// Wait for the K0smotronControlPlane to have a status version
+	var status *cpv1beta1.K0smotronControlPlaneStatus
+	err := wait.PollUntilContextCancel(ctx, 2*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		status, err = s.getK0smotronControlPlaneStatus(clusterName, "default")
+		if err != nil {
+			s.T().Logf("Failed to get K0smotronControlPlane status: %v", err)
+			return false, nil // Retry
+		}
+
+		// Check if status.version is populated
+		if status.Version == "" {
+			s.T().Log("K0smotronControlPlane status.version is not yet populated")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	s.Require().NoError(err, "timeout waiting for K0smotronControlPlane status.version")
+
+	s.T().Logf("K0smotronControlPlane status: version=%s, k0sVersion=%s", status.Version, status.K0sVersion)
+
+	// Verify version format
+	if expectK0sSuffix {
+		// When spec.version has -k0s. suffix, status.version should also have it
+		s.Require().Contains(status.Version, "-k0s.",
+			"expected status.version to contain '-k0s.' suffix, but got: %s", status.Version)
+		s.Require().Equal(expectedSpecVersion, status.Version,
+			"status.version should match expected spec version")
+	} else {
+		// When spec.version doesn't have -k0s. suffix, status.version should not have it
+		s.Require().NotContains(status.Version, "-k0s.",
+			"expected status.version to NOT contain '-k0s.' suffix, but got: %s", status.Version)
+		s.Require().Equal(expectedSpecVersion, status.Version,
+			"status.version should match expected spec version")
+	}
+
+	// Verify that k0sVersion always contains the full version
+	s.Require().NotEmpty(status.K0sVersion, "status.k0sVersion should be populated")
+
+	// k0sVersion should always contain the -k0s. suffix
+	s.Require().Contains(status.K0sVersion, "-k0s.",
+		"status.k0sVersion should always contain '-k0s.' suffix, but got: %s", status.K0sVersion)
+
+	s.T().Logf("Version format verification passed: spec.version=%s, status.version=%s, status.k0sVersion=%s",
+		expectedSpecVersion, status.Version, status.K0sVersion)
 }
