@@ -51,13 +51,13 @@ func workloadClusterInplaceUpgradeSpec(t *testing.T) {
 	testName := "workload-inplace-upgrade"
 
 	// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
-	namespace, _ := util.SetupSpecNamespace(ctx, testName, managementClusterProxy, artifactFolder)
+	namespace, _ := util.SetupSpecNamespace(ctx, testName, bootstrapClusterProxy, artifactFolder)
 
 	clusterName := fmt.Sprintf("%s-%s", testName, capiutil.RandomString(6))
 
 	workloadClusterTemplate := clusterctl.ConfigCluster(ctx, clusterctl.ConfigClusterInput{
 		ClusterctlConfigPath: clusterctlConfigPath,
-		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
+		KubeconfigPath:       bootstrapClusterProxy.GetKubeconfigPath(),
 		// select cluster templates
 		Flavor: "out-of-cluster",
 
@@ -67,7 +67,7 @@ func workloadClusterInplaceUpgradeSpec(t *testing.T) {
 		ControlPlaneMachineCount: ptr.To[int64](3),
 		// TODO: make infra provider configurable
 		InfrastructureProvider: "docker",
-		LogFolder:              filepath.Join(artifactFolder, "clusters", managementClusterProxy.GetName()),
+		LogFolder:              filepath.Join(artifactFolder, "clusters", bootstrapClusterProxy.GetName()),
 		ClusterctlVariables: map[string]string{
 			"CLUSTER_NAME":    clusterName,
 			"NAMESPACE":       namespace.Name,
@@ -77,11 +77,11 @@ func workloadClusterInplaceUpgradeSpec(t *testing.T) {
 	require.NotNil(t, workloadClusterTemplate)
 
 	require.Eventually(t, func() bool {
-		return managementClusterProxy.CreateOrUpdate(ctx, workloadClusterTemplate) == nil
+		return bootstrapClusterProxy.CreateOrUpdate(ctx, workloadClusterTemplate) == nil
 	}, 10*time.Second, 1*time.Second, "Failed to apply the cluster template")
 
 	cluster, err := util.DiscoveryAndWaitForCluster(ctx, capiframework.DiscoveryAndWaitForClusterInput{
-		Getter:    managementClusterProxy.GetClient(),
+		Getter:    bootstrapClusterProxy.GetClient(),
 		Namespace: namespace.Name,
 		Name:      clusterName,
 	}, util.GetInterval(e2eConfig, testName, "wait-cluster"))
@@ -91,7 +91,7 @@ func workloadClusterInplaceUpgradeSpec(t *testing.T) {
 		util.DumpSpecResourcesAndCleanup(
 			ctx,
 			testName,
-			managementClusterProxy,
+			bootstrapClusterProxy,
 			artifactFolder,
 			namespace,
 			cancelWatches,
@@ -102,17 +102,17 @@ func workloadClusterInplaceUpgradeSpec(t *testing.T) {
 	}()
 
 	controlPlane, err := util.DiscoveryAndWaitForControlPlaneInitialized(ctx, capiframework.DiscoveryAndWaitForControlPlaneInitializedInput{
-		Lister:  managementClusterProxy.GetClient(),
+		Lister:  bootstrapClusterProxy.GetClient(),
 		Cluster: cluster,
 	}, util.GetInterval(e2eConfig, testName, "wait-controllers"))
 	require.NoError(t, err)
 	// For Inplace upgrades we need to wait for the controlplane to have all the replicas ready before upgrading it again.
-	err = util.WaitForControlPlaneToBeReady(ctx, managementClusterProxy.GetClient(), controlPlane, util.GetInterval(e2eConfig, testName, "wait-kube-proxy-upgrade"))
+	err = util.WaitForControlPlaneToBeReady(ctx, bootstrapClusterProxy.GetClient(), controlPlane, util.GetInterval(e2eConfig, testName, "wait-kube-proxy-upgrade"))
 	require.NoError(t, err)
 
 	fmt.Println("Upgrading the Kubernetes control-plane version")
 	err = util.UpgradeControlPlaneAndWaitForReadyUpgrade(ctx, util.UpgradeControlPlaneAndWaitForUpgradeInput{
-		ClusterProxy:                     managementClusterProxy,
+		ClusterProxy:                     bootstrapClusterProxy,
 		Cluster:                          cluster,
 		ControlPlane:                     controlPlane,
 		KubernetesUpgradeVersion:         e2eConfig.GetVariable(KubernetesVersionFirstUpgradeTo),
@@ -123,7 +123,7 @@ func workloadClusterInplaceUpgradeSpec(t *testing.T) {
 
 	fmt.Println("Upgrading the Kubernetes control-plane version again")
 	err = util.UpgradeControlPlaneAndWaitForReadyUpgrade(ctx, util.UpgradeControlPlaneAndWaitForUpgradeInput{
-		ClusterProxy:                     managementClusterProxy,
+		ClusterProxy:                     bootstrapClusterProxy,
 		Cluster:                          cluster,
 		ControlPlane:                     controlPlane,
 		KubernetesUpgradeVersion:         e2eConfig.GetVariable(KubernetesVersionSecondUpgradeTo),
