@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package capidockermachinedeployment
+package capidockermachinedeploymentwithsuffix
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"testing"
@@ -66,9 +67,12 @@ func (s *CAPIDockerSuite) SetupSuite() {
 }
 
 func (s *CAPIDockerSuite) TestCAPIDocker() {
+	s.testCAPIDockerWithVersion("docker-md-test", "v1.27.2-k0s.0", "../../config/samples/capi/docker/cluster-with-machinedeployment.yaml", true)
+}
 
+func (s *CAPIDockerSuite) testCAPIDockerWithVersion(clusterName, expectedVersion, yamlPath string, expectK0sSuffix bool) {
 	// Apply the child cluster objects
-	s.applyClusterObjects()
+	s.applyClusterObjects(yamlPath)
 	defer func() {
 		keep := os.Getenv("KEEP_AFTER_TEST")
 		if keep == "true" {
@@ -78,16 +82,20 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 			return
 		}
 		s.T().Log("Deleting cluster objects")
-		s.Require().NoError(util.DeleteCluster("docker-md-test"))
+		s.Require().NoError(util.DeleteCluster(clusterName))
 	}()
 	s.T().Log("cluster objects applied, waiting for cluster to be ready")
 
 	// Wait for the cluster to be ready
 	// Wait to see the CP pods ready
-	s.Require().NoError(util.WaitForStatefulSet(s.ctx, s.client, "kmc-docker-md-test", "default"))
+	s.Require().NoError(util.WaitForStatefulSet(s.ctx, s.client, fmt.Sprintf("kmc-%s", clusterName), "default"))
+
+	// Verify K0smotronControlPlane version format
+	s.T().Log("Verifying K0smotronControlPlane version format")
+	util.VerifyK0smotronControlPlaneVersionFormat(s.ctx, s.T(), s.client, clusterName, expectedVersion, expectK0sSuffix)
 
 	s.T().Log("Starting portforward")
-	fw, err := util.GetPortForwarder(s.restConfig, "kmc-docker-md-test-0", "default", 30443)
+	fw, err := util.GetPortForwarder(s.restConfig, fmt.Sprintf("kmc-%s-0", clusterName), "default", 30443)
 	s.Require().NoError(err)
 
 	go fw.Start(s.Require().NoError)
@@ -98,8 +106,8 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 	localPort, err := fw.LocalPort()
 	s.Require().NoError(err)
 	s.T().Log("waiting to see admin kubeconfig secret")
-	s.Require().NoError(util.WaitForSecret(s.ctx, s.client, "docker-md-test-kubeconfig", "default"))
-	kmcKC, err := util.GetKMCClientSet(s.ctx, s.client, "docker-md-test", "default", localPort)
+	s.Require().NoError(util.WaitForSecret(s.ctx, s.client, fmt.Sprintf("%s-kubeconfig", clusterName), "default"))
+	kmcKC, err := util.GetKMCClientSet(s.ctx, s.client, clusterName, "default", localPort)
 	s.Require().NoError(err)
 
 	s.T().Log("waiting for 2 nodes to be ready")
@@ -129,8 +137,7 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 	s.Require().NoError(err)
 	// Check that the MD gets to ready state
 	s.T().Log("waiting for machinedeployment to be ready")
-	// nolint:staticcheck
-	s.Require().NoError(wait.PollImmediateUntilWithContext(ctx, 1*time.Second, func(ctx context.Context) (done bool, err error) {
+	s.Require().NoError(wait.PollUntilContextCancel(ctx, 1*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		// Get the MachineDeployment
 		md := &clusterv1.MachineDeployment{}
 		err = s.client.RESTClient().
@@ -138,7 +145,7 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 			AbsPath("/apis/cluster.x-k8s.io/v1beta1").
 			Resource("machinedeployments").
 			Namespace("default").
-			Name("docker-md-test").
+			Name(clusterName).
 			Do(ctx).Into(md)
 		if err != nil {
 			return false, err
@@ -150,8 +157,8 @@ func (s *CAPIDockerSuite) TestCAPIDocker() {
 	}))
 }
 
-func (s *CAPIDockerSuite) applyClusterObjects() {
+func (s *CAPIDockerSuite) applyClusterObjects(yamlPath string) {
 	// Exec via kubectl
-	out, err := exec.Command("kubectl", "apply", "-f", "../../config/samples/capi/docker/cluster-with-machinedeployment.yaml").CombinedOutput()
+	out, err := exec.Command("kubectl", "apply", "-f", yamlPath).CombinedOutput()
 	s.Require().NoError(err, "failed to apply cluster objects: %s", string(out))
 }
