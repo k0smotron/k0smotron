@@ -189,55 +189,43 @@ func (s *CAPIDockerSuite) getK0smotronControlPlaneStatus(name, namespace string)
 	return &kcp.Status, nil
 }
 
-// verifyK0smotronControlPlaneVersionFormat verifies that the version format is consistent
-func (s *CAPIDockerSuite) verifyK0smotronControlPlaneVersionFormat(clusterName, expectedSpecVersion string, expectK0sSuffix bool) {
-	ctx, cancel := context.WithTimeout(s.ctx, 2*time.Minute)
+// waitForK0smotronControlPlaneStatus waits for the K0smotronControlPlane status to be populated
+func (s *CAPIDockerSuite) waitForK0smotronControlPlaneStatus(clusterName string, timeout time.Duration) (*cpv1beta1.K0smotronControlPlaneStatus, error) {
+	ctx, cancel := context.WithTimeout(s.ctx, timeout)
 	defer cancel()
 
-	// Wait for the K0smotronControlPlane to have a status version
 	var status *cpv1beta1.K0smotronControlPlaneStatus
 	err := wait.PollUntilContextCancel(ctx, 2*time.Second, true, func(ctx context.Context) (done bool, err error) {
 		status, err = s.getK0smotronControlPlaneStatus(clusterName, "default")
 		if err != nil {
-			s.T().Logf("Failed to get K0smotronControlPlane status: %v", err)
-			return false, nil // Retry
+			return false, nil // Retry on error
 		}
-
-		// Check if status.version is populated
-		if status.Version == "" {
-			s.T().Log("K0smotronControlPlane status.version is not yet populated")
-			return false, nil
-		}
-
-		return true, nil
+		return status.Version != "", nil
 	})
 
-	s.Require().NoError(err, "timeout waiting for K0smotronControlPlane status.version")
+	if err != nil {
+		return nil, fmt.Errorf("timeout waiting for K0smotronControlPlane status: %w", err)
+	}
+	return status, nil
+}
 
-	s.T().Logf("K0smotronControlPlane status: version=%s, k0sVersion=%s", status.Version, status.K0sVersion)
+// verifyK0smotronControlPlaneVersionFormat verifies that the version format is consistent
+func (s *CAPIDockerSuite) verifyK0smotronControlPlaneVersionFormat(clusterName, expectedSpecVersion string, expectK0sSuffix bool) {
+	// Wait for status
+	status, err := s.waitForK0smotronControlPlaneStatus(clusterName, 2*time.Minute)
+	s.Require().NoError(err)
 
-	// Verify version format
+	// Verify version format based on expectK0sSuffix
 	if expectK0sSuffix {
-		// When spec.version has -k0s. suffix, status.version should also have it
-		s.Require().Contains(status.Version, "-k0s.",
-			"expected status.version to contain '-k0s.' suffix, but got: %s", status.Version)
-		s.Require().Equal(expectedSpecVersion, status.Version,
-			"status.version should match expected spec version")
+		s.Require().Contains(status.Version, "-k0s.")
 	} else {
-		// When spec.version doesn't have -k0s. suffix, status.version should not have it
-		s.Require().NotContains(status.Version, "-k0s.",
-			"expected status.version to NOT contain '-k0s.' suffix, but got: %s", status.Version)
-		s.Require().Equal(expectedSpecVersion, status.Version,
-			"status.version should match expected spec version")
+		s.Require().NotContains(status.Version, "-k0s.")
 	}
 
-	// Verify that k0sVersion always contains the full version
-	s.Require().NotEmpty(status.K0sVersion, "status.k0sVersion should be populated")
+	// Verify version matches expected
+	s.Require().Equal(expectedSpecVersion, status.Version)
 
-	// k0sVersion should always contain the -k0s. suffix
-	s.Require().Contains(status.K0sVersion, "-k0s.",
-		"status.k0sVersion should always contain '-k0s.' suffix, but got: %s", status.K0sVersion)
-
-	s.T().Logf("Version format verification passed: spec.version=%s, status.version=%s, status.k0sVersion=%s",
-		expectedSpecVersion, status.Version, status.K0sVersion)
+	// Verify k0sVersion always has suffix
+	s.Require().NotEmpty(status.K0sVersion)
+	s.Require().Contains(status.K0sVersion, "-k0s.")
 }
