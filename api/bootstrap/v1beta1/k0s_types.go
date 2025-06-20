@@ -106,6 +106,21 @@ type K0sWorkerConfigSpec struct {
 	// See: https://cloudinit.readthedocs.io/en/latest/reference/merging.html
 	// +kubebuilder:validation:Optional
 	CustomUserDataRef *ContentSource `json:"customUserDataRef,omitempty"`
+
+	// SecretMetadata specifies metadata (labels and annotations) to be propagated to the bootstrap Secret.
+	// +kubebuilder:validation:Optional
+	SecretMetadata *SecretMetadata `json:"secretMetadata,omitempty"`
+}
+
+// SecretMetadata defines metadata to be propagated to the bootstrap Secret
+type SecretMetadata struct {
+	// Labels to be added to the bootstrap Secret
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// Annotations to be added to the bootstrap Secret
+	// +kubebuilder:validation:Optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type JoinTokenSecretRef struct {

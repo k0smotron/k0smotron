@@ -744,6 +744,13 @@ If specified the version field is ignored and what ever version is downloaded fr
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#k0sworkerconfigspecsecretmetadata">secretMetadata</a></b></td>
+        <td>object</td>
+        <td>
+          SecretMetadata specifies metadata (labels and annotations) to be propagated to the bootstrap Secret.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>useSystemHostname</b></td>
         <td>boolean</td>
         <td>
@@ -1017,6 +1024,40 @@ SecretRef is a reference to a secret that contains the content.
           Name is the name of the source<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0sWorkerConfig.spec.secretMetadata
+<sup><sup>[↩ Parent](#k0sworkerconfigspec)</sup></sup>
+
+
+
+SecretMetadata specifies metadata (labels and annotations) to be propagated to the bootstrap Secret.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>annotations</b></td>
+        <td>map[string]string</td>
+        <td>
+          Annotations to be added to the bootstrap Secret<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>labels</b></td>
+        <td>map[string]string</td>
+        <td>
+          Labels to be added to the bootstrap Secret<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -1368,6 +1409,13 @@ If specified the version field is ignored and what ever version is downloaded fr
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#k0sworkerconfigtemplatespectemplatespecsecretmetadata">secretMetadata</a></b></td>
+        <td>object</td>
+        <td>
+          SecretMetadata specifies metadata (labels and annotations) to be propagated to the bootstrap Secret.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>useSystemHostname</b></td>
         <td>boolean</td>
         <td>
@@ -1641,6 +1689,40 @@ SecretRef is a reference to a secret that contains the content.
           Name is the name of the source<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0sWorkerConfigTemplate.spec.template.spec.secretMetadata
+<sup><sup>[↩ Parent](#k0sworkerconfigtemplatespectemplatespec)</sup></sup>
+
+
+
+SecretMetadata specifies metadata (labels and annotations) to be propagated to the bootstrap Secret.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>annotations</b></td>
+        <td>map[string]string</td>
+        <td>
+          Annotations to be added to the bootstrap Secret<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>labels</b></td>
+        <td>map[string]string</td>
+        <td>
+          Labels to be added to the bootstrap Secret<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

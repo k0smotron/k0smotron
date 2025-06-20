@@ -192,32 +192,7 @@ func (r *Controller) Reconcile(ctx context.Context, req ctrl.Request) (res ctrl.
 	}
 
 	// Create the secret containing the bootstrap data
-	bootstrapSecret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      config.Name,
-			Namespace: config.Namespace,
-			Labels: map[string]string{
-				clusterv1.ClusterNameLabel: scope.Cluster.Name,
-			},
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: bootstrapv1.GroupVersion.String(),
-					Kind:       scope.Config.Kind,
-					Name:       scope.Config.Name,
-					UID:        scope.Config.UID,
-					Controller: ptr.To(true),
-				},
-			},
-		},
-		Data: map[string][]byte{
-			"value": bootstrapData,
-		},
-		Type: clusterv1.ClusterSecretType,
-	}
+	bootstrapSecret := createBootstrapSecret(scope, bootstrapData)
 
 	if err := r.Client.Patch(ctx, bootstrapSecret, client.Apply, &client.PatchOptions{FieldManager: "k0s-bootstrap"}); err != nil {
 		log.Error(err, "Failed to patch bootstrap secret")
@@ -339,6 +314,55 @@ func (r *Controller) getK0sToken(ctx context.Context, scope *Scope) (string, err
 		return "", fmt.Errorf("failed to create join token: %w", err)
 	}
 	return joinToken, nil
+}
+
+// createBootstrapSecret creates a bootstrap secret for the worker node
+func createBootstrapSecret(scope *Scope, bootstrapData []byte) *corev1.Secret {
+	// Initialize labels with cluster-name label
+	labels := map[string]string{
+		clusterv1.ClusterNameLabel: scope.Cluster.Name,
+	}
+
+	// Copy labels from secretMetadata if specified
+	if scope.Config.Spec.SecretMetadata != nil && scope.Config.Spec.SecretMetadata.Labels != nil {
+		for k, v := range scope.Config.Spec.SecretMetadata.Labels {
+			labels[k] = v
+		}
+	}
+
+	// Copy annotations from secretMetadata if specified
+	annotations := map[string]string{}
+	if scope.Config.Spec.SecretMetadata != nil && scope.Config.Spec.SecretMetadata.Annotations != nil {
+		for k, v := range scope.Config.Spec.SecretMetadata.Annotations {
+			annotations[k] = v
+		}
+	}
+
+	return &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        scope.Config.Name,
+			Namespace:   scope.Config.Namespace,
+			Labels:      labels,
+			Annotations: annotations,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: bootstrapv1.GroupVersion.String(),
+					Kind:       scope.Config.Kind,
+					Name:       scope.Config.Name,
+					UID:        scope.Config.UID,
+					Controller: ptr.To(true),
+				},
+			},
+		},
+		Data: map[string][]byte{
+			"value": bootstrapData,
+		},
+		Type: clusterv1.ClusterSecretType,
+	}
 }
 
 func createInstallCmd(scope *Scope) string {

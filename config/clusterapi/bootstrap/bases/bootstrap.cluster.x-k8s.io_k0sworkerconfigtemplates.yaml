@@ -179,6 +179,22 @@ spec:
                         items:
                           type: string
                         type: array
+                      secretMetadata:
+                        description: SecretMetadata specifies metadata (labels and
+                          annotations) to be propagated to the bootstrap Secret.
+                        properties:
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            description: Annotations to be added to the bootstrap
+                              Secret
+                            type: object
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels to be added to the bootstrap Secret
+                            type: object
+                        type: object
                       useSystemHostname:
                         default: false
                         description: |-
