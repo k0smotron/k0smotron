@@ -132,7 +132,7 @@ func denyRecreateOnSingleClusters(kcp *v1beta1.K0sControlPlane) error {
 // SetupK0sControlPlaneWebhookWithManager registers the webhook for K0sControlPlane in the manager.
 func (v *K0sControlPlaneValidator) SetupK0sControlPlaneWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1beta1.K0sControlPlane{}).
 		WithValidator(v).
+		For(&v1beta1.K0sControlPlane{}).
 		Complete()
 }

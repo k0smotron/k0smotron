@@ -47,7 +47,7 @@ var _ webhook.CustomDefaulter = &ClusterDefaulter{}
 
 func (c *ClusterDefaulter) SetupK0sControlPlaneWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(&km.Cluster{}).
 		WithDefaulter(c).
+		For(&km.Cluster{}).
 		Complete()
 }
