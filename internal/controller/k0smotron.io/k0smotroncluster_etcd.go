@@ -267,7 +267,8 @@ func (r *ClusterReconciler) generateEtcdStatefulSet(kmc *km.Cluster, existingSts
 			PodManagementPolicy: apps.ParallelPodManagement,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels:      labels,
+					Annotations: kcontrollerutil.AnnotationsForK0smotronCluster(kmc),
 				},
 				Spec: v1.PodSpec{
 					AutomountServiceAccountToken: ptr.To(false),
