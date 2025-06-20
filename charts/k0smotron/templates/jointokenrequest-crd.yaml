@@ -1,0 +1,102 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: jointokenrequests.k0smotron.io
+  annotations:
+    cert-manager.io/inject-ca-from: '{{ .Release.Namespace }}/{{ include "k0smotron.fullname"
+      . }}-serving-cert'
+    controller-gen.kubebuilder.io/version: v0.14.0
+  labels:
+  {{- include "k0smotron.labels" . | nindent 4 }}
+spec:
+  group: k0smotron.io
+  names:
+    kind: JoinTokenRequest
+    listKind: JoinTokenRequestList
+    plural: jointokenrequests
+    shortNames:
+    - jtr
+    singular: jointokenrequest
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: JoinTokenRequest is the Schema for the join token request API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: JoinTokenRequestSpec defines the desired state of K0smotronJoinTokenRequest
+            properties:
+              clusterRef:
+                description: ClusterRef is the reference to the cluster for which the
+                  join token is requested.
+                properties:
+                  name:
+                    description: Name of the cluster.
+                    type: string
+                  namespace:
+                    description: Namespace of the cluster.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+              expiry:
+                default: 0s
+                description: Expiration time of the token. Format 1.5h, 2h45m or 300ms.
+                type: string
+              role:
+                default: worker
+                description: Role of the node for which the token is requested (worker
+                  or controller).
+                enum:
+                - worker
+                - controller
+                type: string
+            required:
+            - clusterRef
+            type: object
+          status:
+            description: JoinTokenRequestStatus defines the observed state of K0smotronJoinTokenRequest
+            properties:
+              clusterUID:
+                description: |-
+                  UID is a type that holds unique ID values, including UUIDs.  Because we
+                  don't ONLY use UUIDs, this is an alias to string.  Being a type captures
+                  intent and helps make sure that UIDs and names do not get conflated.
+                type: string
+              reconciliationStatus:
+                type: string
+              tokenID:
+                type: string
+            required:
+            - reconciliationStatus
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

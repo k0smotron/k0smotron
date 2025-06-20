@@ -94,9 +94,12 @@ jobs:
         run: |
           STABLE=${{ steps.set_versions.outputs.STABLE }}
           make release IMG=quay.io/k0sproject/k0smotron:${STABLE}
+          make helm IMG=quay.io/k0sproject/k0smotron:${STABLE}
+          cp -r charts /tmp/charts
           cp install.yaml /tmp/install.yaml
           git checkout gh-pages
-          cp /tmp/install.yaml ${STABLE}/install.yaml 
-          git add ${STABLE}/install.yaml && git update-index --refresh
+          cp /tmp/install.yaml ${STABLE}/install.yaml
+          cp -r /tmp/charts charts
+          git add chart ${STABLE}/install.yaml && git update-index --refresh
           git diff-index --quiet HEAD -- || git commit -m "Update install.yaml to ${STABLE}"
           git push origin gh-pages

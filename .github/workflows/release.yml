@@ -85,6 +85,23 @@ jobs:
           make control-plane-components.yaml IMG=quay.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
           make infrastructure-components.yaml IMG=quay.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
 
+      - name: Create Helm chart
+        if: github.repository == 'k0smotron/k0smotron'
+        run: |
+          make helm IMG=quay.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
+
+      - name: Push Helm chart to OCI registry
+        uses: appany/helm-oci-chart-releaser@dd0551c15abe174eb57824ecde62e976091094da # v0.4.2
+        with:
+          name: k0smotron-helm-chart
+          repository: k0sproject
+          tag: ${{ steps.branch_name.outputs.TAG_NAME }}
+          path: charts/k0smotron # Default charts/{name}
+          registry: ghcr.io
+          registry_username: ${{ github.actor }}
+          registry_password: ${{ secrets.GITHUB_TOKEN }}
+          update_dependencies: true # Defaults to false
+
       - name: Upload Release Assets - metadata.yaml
         id: upload-release-asset-metadata
         uses: shogo82148/actions-upload-release-asset@v1.8.1
