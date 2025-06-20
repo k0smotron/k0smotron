@@ -26,6 +26,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"testing"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -436,4 +438,73 @@ func dowloadStableK0smotronOperator() (string, error) {
 		return "", fmt.Errorf("failed to save k0smotron install file: %v", err)
 	}
 	return installFile.Name(), nil
+}
+
+// GetK0smotronControlPlaneStatus retrieves the K0smotronControlPlane status
+func GetK0smotronControlPlaneStatus(ctx context.Context, client *kubernetes.Clientset, name, namespace string) (*cpv1beta1.K0smotronControlPlaneStatus, error) {
+	kcp := &cpv1beta1.K0smotronControlPlane{}
+	err := client.RESTClient().
+		Get().
+		AbsPath("/apis/controlplane.cluster.x-k8s.io/v1beta1").
+		Resource("k0smotroncontrolplanes").
+		Namespace(namespace).
+		Name(name).
+		Do(ctx).Into(kcp)
+	if err != nil {
+		return nil, err
+	}
+	return &kcp.Status, nil
+}
+
+// WaitForK0smotronControlPlaneStatus waits for the K0smotronControlPlane status to be populated
+func WaitForK0smotronControlPlaneStatus(ctx context.Context, client *kubernetes.Clientset, clusterName string, timeout time.Duration) (*cpv1beta1.K0smotronControlPlaneStatus, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	var status *cpv1beta1.K0smotronControlPlaneStatus
+	err := wait.PollUntilContextCancel(ctx, 2*time.Second, true, func(ctx context.Context) (done bool, err error) {
+		status, err = GetK0smotronControlPlaneStatus(ctx, client, clusterName, "default")
+		if err != nil {
+			return false, nil // Retry on error
+		}
+		return status.Version != "", nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("timeout waiting for K0smotronControlPlane status: %w", err)
+	}
+	return status, nil
+}
+
+// VerifyK0smotronControlPlaneVersionFormat verifies that the version format is consistent
+func VerifyK0smotronControlPlaneVersionFormat(ctx context.Context, t *testing.T, client *kubernetes.Clientset, clusterName, expectedSpecVersion string, expectK0sSuffix bool) {
+	// Wait for status
+	status, err := WaitForK0smotronControlPlaneStatus(ctx, client, clusterName, 2*time.Minute)
+	if err != nil {
+		t.Fatalf("Failed to wait for K0smotronControlPlane status: %v", err)
+	}
+
+	// Verify version format based on expectK0sSuffix
+	if expectK0sSuffix {
+		if !strings.Contains(status.Version, "-k0s.") {
+			t.Errorf("Expected version to contain '-k0s.' suffix, but got: %s", status.Version)
+		}
+	} else {
+		if strings.Contains(status.Version, "-k0s.") {
+			t.Errorf("Expected version to NOT contain '-k0s.' suffix, but got: %s", status.Version)
+		}
+	}
+
+	// Verify version matches expected
+	if status.Version != expectedSpecVersion {
+		t.Errorf("Expected version %s, but got: %s", expectedSpecVersion, status.Version)
+	}
+
+	// Verify k0sVersion always has suffix
+	if status.K0sVersion == "" {
+		t.Error("K0sVersion should not be empty")
+	}
+	if !strings.Contains(status.K0sVersion, "-k0s.") {
+		t.Errorf("K0sVersion should always contain '-k0s.' suffix, but got: %s", status.K0sVersion)
+	}
 }

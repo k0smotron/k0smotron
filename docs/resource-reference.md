@@ -12468,6 +12468,13 @@ to check the operational state of the control plane.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>k0sVersion</b></td>
+        <td>string</td>
+        <td>
+          K0sVersion represents the full k0s version string including build metadata<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>ready</b></td>
         <td>boolean</td>
         <td>

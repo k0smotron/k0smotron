@@ -91,4 +91,7 @@ type K0smotronControlPlaneStatus struct {
 	// They may either be pods that are running but not yet ready.
 	// +optional
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	// K0sVersion represents the full k0s version string including build metadata
+	// +optional
+	K0sVersion string `json:"k0sVersion,omitempty"`
 }

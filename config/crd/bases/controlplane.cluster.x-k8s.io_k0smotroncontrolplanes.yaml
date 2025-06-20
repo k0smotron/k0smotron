@@ -4600,6 +4600,10 @@ spec:
                   The value of this field is never updated after provisioning is completed. Please use conditions
                   to check the operational state of the control plane.
                 type: boolean
+              k0sVersion:
+                description: K0sVersion represents the full k0s version string including
+                  build metadata
+                type: string
               ready:
                 description: Ready denotes that the control plane is ready
                 type: boolean

@@ -23,6 +23,8 @@ smoketests := \
     check-capi-controlplane-docker-tunneling-proxy \
     check-monitoring \
     check-capi-docker-machinedeployment \
+    check-capi-docker-machinedeployment-with-suffix \
+    check-capi-docker-machinedeployment-no-suffix \
     check-capi-docker-clusterclass \
     check-capi-docker-clusterclass-recreate-upgrade \
     check-capi-docker-clusterclass-k0smotron \
