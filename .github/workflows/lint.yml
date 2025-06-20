@@ -47,7 +47,7 @@ jobs:
             ~/.cache/golangci-lint
 
       - name: Check generated code to be consistent
-        run: make clean && make generate manifests clusterapi-manifests docs-generate-reference release && git diff --exit-code
+        run: make generate-all && git diff --exit-code
 
       - name: Run linter
         env:
