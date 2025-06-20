@@ -58,8 +58,8 @@ func workloadClusterRecreateUpgradeSpec(t *testing.T) {
 	workloadClusterTemplate := clusterctl.ConfigCluster(ctx, clusterctl.ConfigClusterInput{
 		ClusterctlConfigPath: clusterctlConfigPath,
 		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
-		// TODO: use kustomize for more flexibility when using desired flavor
-		Flavor: "custom-haproxy",
+		// no flavor specified, so it will use the default one "cluster-template"
+		Flavor: "",
 
 		Namespace:                namespace.Name,
 		ClusterName:              clusterName,

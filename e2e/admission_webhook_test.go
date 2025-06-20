@@ -30,16 +30,16 @@ import (
 	capiutil "sigs.k8s.io/cluster-api/util"
 )
 
-func TestAdmissionWebhookT1(t *testing.T) {
-	setupAndRun(t, admissionWebhookSpecT1)
+func TestAdmissionWebhookRecreateStrategyInSingleMode(t *testing.T) {
+	setupAndRun(t, admissionWebhookRecreateStrategyInSingleModeSpec)
 }
 
-func TestAdmissionWebhookT2(t *testing.T) {
-	setupAndRun(t, admissionWebhookSpecT2)
+func TestAdmissionWebhookK0sVersionNotCompatible(t *testing.T) {
+	setupAndRun(t, admissionWebhookK0sVersionNotCompatibleSpec)
 }
 
-func admissionWebhookSpecT1(t *testing.T) {
-	testName := "admission-webhook-t1"
+func admissionWebhookRecreateStrategyInSingleModeSpec(t *testing.T) {
+	testName := "admission-webhook-recreate-single-mode"
 
 	// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
 	namespace, _ := util.SetupSpecNamespace(ctx, testName, managementClusterProxy, artifactFolder)
@@ -50,7 +50,7 @@ func admissionWebhookSpecT1(t *testing.T) {
 		ClusterctlConfigPath: clusterctlConfigPath,
 		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
 		// select cluster templates
-		Flavor: "admission-webhook-t1",
+		Flavor: "webhook-recreate-in-single-mode",
 
 		Namespace:                namespace.Name,
 		ClusterName:              clusterName,
@@ -60,9 +60,8 @@ func admissionWebhookSpecT1(t *testing.T) {
 		InfrastructureProvider: "docker",
 		LogFolder:              filepath.Join(artifactFolder, "clusters", managementClusterProxy.GetName()),
 		ClusterctlVariables: map[string]string{
-			"CLUSTER_NAME":    clusterName,
-			"NAMESPACE":       namespace.Name,
-			"UPDATE_STRATEGY": "Recreate",
+			"CLUSTER_NAME": clusterName,
+			"NAMESPACE":    namespace.Name,
 		},
 	})
 	require.NotNil(t, workloadClusterTemplate)
@@ -72,8 +71,8 @@ func admissionWebhookSpecT1(t *testing.T) {
 	require.Contains(t, err.Error(), "UpdateStrategy Recreate strategy is not allowed when the cluster is running in single mode")
 }
 
-func admissionWebhookSpecT2(t *testing.T) {
-	testName := "admission-webhook-t2"
+func admissionWebhookK0sVersionNotCompatibleSpec(t *testing.T) {
+	testName := "admission-webhook-k0s-not-compatible"
 
 	// Setup a Namespace where to host objects for this spec and create a watcher for the namespace events.
 	namespace, _ := util.SetupSpecNamespace(ctx, testName, managementClusterProxy, artifactFolder)
@@ -84,7 +83,7 @@ func admissionWebhookSpecT2(t *testing.T) {
 		ClusterctlConfigPath: clusterctlConfigPath,
 		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
 		// select cluster templates
-		Flavor: "admission-webhook-t2",
+		Flavor: "webhook-k0s-not-compatible",
 
 		Namespace:                namespace.Name,
 		ClusterName:              clusterName,

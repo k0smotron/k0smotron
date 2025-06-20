@@ -1,0 +1,4 @@
+resources:
+- cluster-with-kcp.yaml
+- ../bases/machine.yaml
+- mhc.yaml

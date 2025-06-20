@@ -1,0 +1,17 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineHealthCheck
+metadata:
+  name: ${CLUSTER_NAME}-mhc-0
+  namespace: ${NAMESPACE}
+spec:
+  clusterName: ${CLUSTER_NAME}
+  maxUnhealthy: 100%
+  nodeStartupTimeout: 60s
+  selector:
+    matchLabels:
+      cluster.x-k8s.io/control-plane: "true"
+      mhc-test: fail
+  unhealthyConditions:
+  - status: "False"
+    timeout: 10s
+    type: e2e.remediation.condition

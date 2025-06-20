@@ -34,11 +34,10 @@ providers:
           - old: "imagePullPolicy: Always"
             new: "imagePullPolicy: IfNotPresent"
     files:
-      - sourcePath: "../data/infrastructure-docker/cluster-template-out-of-cluster.yaml"
-      - sourcePath: "../data/infrastructure-docker/cluster-template-remediation.yaml"
-      - sourcePath: "../data/infrastructure-docker/cluster-template-admission-webhook-t1.yaml"
-      - sourcePath: "../data/infrastructure-docker/cluster-template-admission-webhook-t2.yaml"
-      - sourcePath: "../data/infrastructure-docker/cluster-template-custom-haproxy.yaml"
+      - sourcePath: "../data/infrastructure-docker/main/cluster-template.yaml"
+      - sourcePath: "../data/infrastructure-docker/main/cluster-template-kcp-remediation.yaml"
+      - sourcePath: "../data/infrastructure-docker/main/cluster-template-webhook-recreate-in-single-mode.yaml"
+      - sourcePath: "../data/infrastructure-docker/main/cluster-template-webhook-k0s-not-compatible.yaml"
   - name: k0sproject-k0smotron
     type: ControlPlaneProvider
     versions:

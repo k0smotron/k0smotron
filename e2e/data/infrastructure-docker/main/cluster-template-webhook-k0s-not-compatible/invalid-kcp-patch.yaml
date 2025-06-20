@@ -1,0 +1,38 @@
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: K0sControlPlane
+metadata:
+  name: ${CLUSTER_NAME}-docker-test
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+  version: v1.31.1+k0s.0
+  updateStrategy: ${UPDATE_STRATEGY}
+  k0sConfigSpec:
+    args:
+    - --enable-worker
+    k0s:
+      apiVersion: k0s.k0sproject.io/v1beta1
+      kind: ClusterConfig
+      metadata:
+        name: k0s
+      spec:
+        api:
+          extraArgs:
+            anonymous-auth: "true"
+        telemetry:
+          enabled: false
+        network:
+          controlPlaneLoadBalancing:
+            enabled: false 
+    files:
+    - path: /tmp/test-file-secret
+      contentFrom: 
+        secretRef: 
+          name: test-file-secret
+          key: value
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: DockerMachineTemplate
+      name: docker-test-cp-template
+      namespace: ${NAMESPACE}

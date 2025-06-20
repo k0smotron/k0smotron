@@ -75,7 +75,7 @@ func controlplaneRemediationSpec(t *testing.T) {
 		ClusterctlConfigPath: clusterctlConfigPath,
 		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
 		// select cluster templates
-		Flavor: "remediation",
+		Flavor: "kcp-remediation",
 
 		Namespace:                namespace.Name,
 		ClusterName:              clusterName,

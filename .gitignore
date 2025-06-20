@@ -35,3 +35,6 @@ k0smotron-image-bundle.tar
 
 # test results
 _artifacts
+
+# E2E test templates
+e2e/data/infrastructure-docker/**/cluster-template*.yaml

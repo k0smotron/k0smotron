@@ -183,8 +183,8 @@ jobs:
           - controlplane-remediation
           - workload-cluster-inplace-upgrade
           - workload-cluster-recreate-upgrade
-          - admission-webhook-t1
-          - admission-webhook-t2
+          - admission-webhook-recreate-strategy-in-single-mode
+          - admission-webhook-k0s-not-compatible
 
     steps:
       - name: Check out code into the Go module directory

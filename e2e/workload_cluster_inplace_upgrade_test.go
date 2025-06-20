@@ -58,8 +58,8 @@ func workloadClusterInplaceUpgradeSpec(t *testing.T) {
 	workloadClusterTemplate := clusterctl.ConfigCluster(ctx, clusterctl.ConfigClusterInput{
 		ClusterctlConfigPath: clusterctlConfigPath,
 		KubeconfigPath:       managementClusterProxy.GetKubeconfigPath(),
-		// select cluster templates
-		Flavor: "out-of-cluster",
+		// no flavor specified, so it will use the default one "cluster-template"
+		Flavor: "",
 
 		Namespace:                namespace.Name,
 		ClusterName:              clusterName,

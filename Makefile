@@ -106,7 +106,16 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $(GO_TEST_DIRS) -coverprofile cover.out
 
-e2e: k0smotron-image-bundle.tar install.yaml kustomize
+DOCKER_TEMPLATES := e2e/data/infrastructure-docker
+
+.PHONY: generate-e2e-templates-main
+generate-e2e-templates-main: $(KUSTOMIZE)
+	$(KUSTOMIZE) build $(DOCKER_TEMPLATES)/main/cluster-template-kcp-remediation --load-restrictor LoadRestrictionsNone > $(DOCKER_TEMPLATES)/main/cluster-template-kcp-remediation.yaml
+	$(KUSTOMIZE) build $(DOCKER_TEMPLATES)/main/cluster-template --load-restrictor LoadRestrictionsNone > $(DOCKER_TEMPLATES)/main/cluster-template.yaml
+	$(KUSTOMIZE) build $(DOCKER_TEMPLATES)/main/cluster-template-webhook-recreate-in-single-mode --load-restrictor LoadRestrictionsNone > $(DOCKER_TEMPLATES)/main/cluster-template-webhook-recreate-in-single-mode.yaml
+	$(KUSTOMIZE) build $(DOCKER_TEMPLATES)/main/cluster-template-webhook-k0s-not-compatible --load-restrictor LoadRestrictionsNone > $(DOCKER_TEMPLATES)/main/cluster-template-webhook-k0s-not-compatible.yaml
+
+e2e: k0smotron-image-bundle.tar install.yaml kustomize generate-e2e-templates-main
 	set +x;
 	PATH="${LOCALBIN}:${PATH}" go test -v -tags e2e -run '$(TEST_NAME)' ./e2e  \
 	    -artifacts-folder="$(ARTIFACTS)" \
