@@ -241,6 +241,27 @@ spec:
                   ExternalAddress defines k0s external address. See https://docs.k0sproject.io/stable/configuration/#specapi
                   Will be detected automatically for service type LoadBalancer.
                 type: string
+              hostingClusterKubeconfigRef:
+                description: |-
+                  HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+                  This kubeconfig will be used to deploy the k0s control plane.
+                properties:
+                  key:
+                    default: value
+                    description: Key is the key in the secret containing the kubeconfig
+                      of the hosting cluster.
+                    type: string
+                  name:
+                    description: Name is the name of the secret containing the kubeconfig
+                      of the hosting cluster.
+                    type: string
+                  namespace:
+                    description: Namespace is the namespace of the secret containing
+                      the kubeconfig of the hosting cluster.
+                    type: string
+                required:
+                - name
+                type: object
               image:
                 default: k0sproject/k0s
                 description: |-

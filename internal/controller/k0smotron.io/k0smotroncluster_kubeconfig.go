@@ -30,15 +30,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (r *ClusterReconciler) reconcileKubeConfigSecret(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileKubeConfigSecret(ctx context.Context, kmc *km.Cluster) error {
 	logger := log.FromContext(ctx)
-	pod, err := r.findStatefulSetPod(ctx, kmc.GetStatefulSetName(), kmc.Namespace)
+	pod, err := findStatefulSetPod(ctx, kmc.GetStatefulSetName(), kmc.Namespace, scope.clienSet)
 
 	if err != nil {
 		return err
 	}
 
-	output, err := exec.PodExecCmdOutput(ctx, r.ClientSet, r.RESTConfig, pod.Name, kmc.Namespace, "k0s kubeconfig create admin --groups system:masters")
+	output, err := exec.PodExecCmdOutput(ctx, scope.clienSet, scope.restConfig, pod.Name, kmc.Namespace, "k0s kubeconfig create admin --groups system:masters")
 	if err != nil {
 		return err
 	}
@@ -61,9 +61,7 @@ func (r *ClusterReconciler) reconcileKubeConfigSecret(ctx context.Context, kmc *
 		Type:       clusterv1.ClusterSecretType,
 	}
 
-	if err = ctrl.SetControllerReference(kmc, &secret, r.Scheme); err != nil {
-		return err
-	}
+	_ = ctrl.SetControllerReference(kmc, &secret, scope.client.Scheme())
 
-	return r.Client.Patch(ctx, &secret, client.Apply, patchOpts...)
+	return scope.client.Patch(ctx, &secret, client.Apply, patchOpts...)
 }

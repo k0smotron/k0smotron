@@ -32,6 +32,10 @@ import (
 
 // ClusterSpec defines the desired state of K0smotronCluster
 type ClusterSpec struct {
+	// HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+	// This kubeconfig will be used to deploy the k0s control plane.
+	//+kubebuilder:validation:Optional
+	HostingClusterKubeconfigRef *HostingClusterKubeconfigRef `json:"hostingClusterKubeconfigRef,omitempty"`
 	// Replicas is the desired number of replicas of the k0s control planes.
 	// If unspecified, defaults to 1. If the value is above 1, k0smotron requires kine datasource URL to be set.
 	// Recommended value is 3.
@@ -318,6 +322,19 @@ type CertificateRef struct {
 	Type string `json:"type"`
 	//+kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
+}
+
+type HostingClusterKubeconfigRef struct {
+	// Name is the name of the secret containing the kubeconfig of the hosting cluster.
+	//+kubebuilder:validation:Required
+	Name string `json:"name"`
+	// Namespace is the namespace of the secret containing the kubeconfig of the hosting cluster.
+	//+kubebuilder:validation:Optional
+	Namespace string `json:"namespace,omitempty"`
+	// Key is the key in the secret containing the kubeconfig of the hosting cluster.
+	//+kubebuilder:validation:Optional
+	//+kubebuilder:default="value"
+	Key string `json:"key,omitempty"`
 }
 
 func init() {

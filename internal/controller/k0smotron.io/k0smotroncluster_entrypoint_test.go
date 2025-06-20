@@ -56,8 +56,7 @@ func TestGetControllerFlags(t *testing.T) {
 		},
 	}
 
-	r := &ClusterReconciler{}
 	for _, test := range tests {
-		assert.Equal(t, test.result, r.getControllerFlags(&test.kmc), test.name)
+		assert.Equal(t, test.result, getControllerFlags(&test.kmc), test.name)
 	}
 }

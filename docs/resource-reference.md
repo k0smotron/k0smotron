@@ -3412,6 +3412,14 @@ Will be detected automatically for service type LoadBalancer.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanespechostingclusterkubeconfigref">hostingClusterKubeconfigRef</a></b></td>
+        <td>object</td>
+        <td>
+          HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+This kubeconfig will be used to deploy the k0s control plane.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>image</b></td>
         <td>string</td>
         <td>
@@ -3811,6 +3819,50 @@ the Pod where this field is used. It makes that resource available
 inside a container.<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlane.spec.hostingClusterKubeconfigRef
+<sup><sup>[↩ Parent](#k0smotroncontrolplanespec)</sup></sup>
+
+
+
+HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+This kubeconfig will be used to deploy the k0s control plane.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the secret containing the kubeconfig of the hosting cluster.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the key in the secret containing the kubeconfig of the hosting cluster.<br/>
+          <br/>
+            <i>Default</i>: value<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Namespace is the namespace of the secret containing the kubeconfig of the hosting cluster.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -12738,6 +12790,14 @@ Will be detected automatically for service type LoadBalancer.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#k0smotroncontrolplanetemplatespectemplatespechostingclusterkubeconfigref">hostingClusterKubeconfigRef</a></b></td>
+        <td>object</td>
+        <td>
+          HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+This kubeconfig will be used to deploy the k0s control plane.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>image</b></td>
         <td>string</td>
         <td>
@@ -13137,6 +13197,50 @@ the Pod where this field is used. It makes that resource available
 inside a container.<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### K0smotronControlPlaneTemplate.spec.template.spec.hostingClusterKubeconfigRef
+<sup><sup>[↩ Parent](#k0smotroncontrolplanetemplatespectemplatespec)</sup></sup>
+
+
+
+HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+This kubeconfig will be used to deploy the k0s control plane.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the secret containing the kubeconfig of the hosting cluster.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the key in the secret containing the kubeconfig of the hosting cluster.<br/>
+          <br/>
+            <i>Default</i>: value<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Namespace is the namespace of the secret containing the kubeconfig of the hosting cluster.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -39002,6 +39106,14 @@ Will be detected automatically for service type LoadBalancer.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#clusterspechostingclusterkubeconfigref">hostingClusterKubeconfigRef</a></b></td>
+        <td>object</td>
+        <td>
+          HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+This kubeconfig will be used to deploy the k0s control plane.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>image</b></td>
         <td>string</td>
         <td>
@@ -39401,6 +39513,50 @@ the Pod where this field is used. It makes that resource available
 inside a container.<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Cluster.spec.hostingClusterKubeconfigRef
+<sup><sup>[↩ Parent](#clusterspec)</sup></sup>
+
+
+
+HostingClusterKubeconfigRef is the reference to the kubeconfig of the hosting cluster.
+This kubeconfig will be used to deploy the k0s control plane.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the secret containing the kubeconfig of the hosting cluster.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the key in the secret containing the kubeconfig of the hosting cluster.<br/>
+          <br/>
+            <i>Default</i>: value<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Namespace is the namespace of the secret containing the kubeconfig of the hosting cluster.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

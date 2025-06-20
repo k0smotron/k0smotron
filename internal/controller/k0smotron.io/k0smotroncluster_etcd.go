@@ -46,19 +46,19 @@ func init() {
 	etcdEntrypointScriptTmpl = template.Must(template.New("entrypoint.sh").Parse(etcdEntrypointScriptTemplate))
 }
 
-func (r *ClusterReconciler) reconcileEtcd(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileEtcd(ctx context.Context, kmc *km.Cluster) error {
 	if kmc.Spec.KineDataSourceURL != "" || kmc.Spec.KineDataSourceSecretName != "" {
 		return nil
 	}
 
-	if err := r.reconcileEtcdSvc(ctx, kmc); err != nil {
+	if err := scope.reconcileEtcdSvc(ctx, kmc); err != nil {
 		return fmt.Errorf("error reconciling etcd service: %w", err)
 	}
-	if err := r.reconcileEtcdStatefulSet(ctx, kmc); err != nil {
+	if err := scope.reconcileEtcdStatefulSet(ctx, kmc); err != nil {
 		return fmt.Errorf("error reconciling etcd statefulset: %w", err)
 	}
 	if kmc.Spec.Etcd.DefragJob.Enabled {
-		if err := r.reconcileEtcdDefragJob(ctx, kmc); err != nil {
+		if err := scope.reconcileEtcdDefragJob(ctx, kmc); err != nil {
 			return fmt.Errorf("error reconciling etcd defrag job: %w", err)
 		}
 	}
@@ -66,7 +66,7 @@ func (r *ClusterReconciler) reconcileEtcd(ctx context.Context, kmc *km.Cluster) 
 	return nil
 }
 
-func (r *ClusterReconciler) reconcileEtcdSvc(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileEtcdSvc(ctx context.Context, kmc *km.Cluster) error {
 	labels := kcontrollerutil.LabelsForEtcdK0smotronCluster(kmc)
 
 	svc := v1.Service{
@@ -100,12 +100,12 @@ func (r *ClusterReconciler) reconcileEtcdSvc(ctx context.Context, kmc *km.Cluste
 		},
 	}
 
-	_ = ctrl.SetControllerReference(kmc, &svc, r.Scheme)
+	_ = ctrl.SetControllerReference(kmc, &svc, scope.client.Scheme())
 
-	return r.Client.Patch(ctx, &svc, client.Apply, patchOpts...)
+	return scope.client.Patch(ctx, &svc, client.Apply, patchOpts...)
 }
 
-func (r *ClusterReconciler) reconcileEtcdDefragJob(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileEtcdDefragJob(ctx context.Context, kmc *km.Cluster) error {
 	labels := kcontrollerutil.LabelsForEtcdK0smotronCluster(kmc)
 
 	cronJob := batchv1.CronJob{
@@ -182,15 +182,15 @@ func (r *ClusterReconciler) reconcileEtcdDefragJob(ctx context.Context, kmc *km.
 		},
 	}
 
-	_ = ctrl.SetControllerReference(kmc, &cronJob, r.Scheme)
+	_ = ctrl.SetControllerReference(kmc, &cronJob, scope.client.Scheme())
 
-	return r.Client.Patch(ctx, &cronJob, client.Apply, patchOpts...)
+	return scope.client.Patch(ctx, &cronJob, client.Apply, patchOpts...)
 }
 
-func (r *ClusterReconciler) reconcileEtcdStatefulSet(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileEtcdStatefulSet(ctx context.Context, kmc *km.Cluster) error {
 	desiredReplicas := calculateDesiredReplicas(kmc)
 
-	foundStatefulSet, err := r.ClientSet.AppsV1().StatefulSets(kmc.Namespace).Get(ctx, kmc.GetEtcdStatefulSetName(), metav1.GetOptions{})
+	foundStatefulSet, err := scope.clienSet.AppsV1().StatefulSets(kmc.Namespace).Get(ctx, kmc.GetEtcdStatefulSetName(), metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return err
@@ -208,14 +208,14 @@ func (r *ClusterReconciler) reconcileEtcdStatefulSet(ctx context.Context, kmc *k
 		}
 	}
 
-	statefulSet := r.generateEtcdStatefulSet(kmc, foundStatefulSet, desiredReplicas)
+	statefulSet := generateEtcdStatefulSet(kmc, foundStatefulSet, desiredReplicas)
 
-	_ = ctrl.SetControllerReference(kmc, &statefulSet, r.Scheme)
+	_ = ctrl.SetControllerReference(kmc, &statefulSet, scope.client.Scheme())
 
-	return r.Client.Patch(ctx, &statefulSet, client.Apply, patchOpts...)
+	return scope.client.Patch(ctx, &statefulSet, client.Apply, patchOpts...)
 }
 
-func (r *ClusterReconciler) generateEtcdStatefulSet(kmc *km.Cluster, existingSts *apps.StatefulSet, replicas int32) apps.StatefulSet {
+func generateEtcdStatefulSet(kmc *km.Cluster, existingSts *apps.StatefulSet, replicas int32) apps.StatefulSet {
 	labels := kcontrollerutil.LabelsForEtcdK0smotronCluster(kmc)
 
 	size := kmc.Spec.Etcd.Persistence.Size
@@ -330,7 +330,7 @@ func (r *ClusterReconciler) generateEtcdStatefulSet(kmc *km.Cluster, existingSts
 					SecurityContext: &v1.PodSecurityContext{
 						FSGroup: ptr.To(int64(1001)),
 					},
-					InitContainers: r.generateEtcdInitContainers(kmc, existingSts),
+					InitContainers: generateEtcdInitContainers(kmc, existingSts),
 					Containers: []v1.Container{{
 						Name:            "etcd",
 						Image:           kmc.Spec.Etcd.Image,
@@ -343,7 +343,7 @@ func (r *ClusterReconciler) generateEtcdStatefulSet(kmc *km.Cluster, existingSts
 							{Name: "ETCDCTL_CACERT", Value: "/var/lib/k0s/pki/etcd/ca.crt"},
 							{Name: "ETCDCTL_CERT", Value: "/var/lib/k0s/pki/etcd/server.crt"},
 							{Name: "ETCDCTL_KEY", Value: "/var/lib/k0s/pki/etcd/server.key"},
-							{Name: "ETCD_INITIAL_CLUSTER", Value: r.initialCluster(kmc, replicas)},
+							{Name: "ETCD_INITIAL_CLUSTER", Value: initialCluster(kmc, replicas)},
 						},
 						Resources: kmc.Spec.Etcd.Resources,
 						ReadinessProbe: &v1.Probe{
@@ -393,7 +393,7 @@ func (r *ClusterReconciler) generateEtcdStatefulSet(kmc *km.Cluster, existingSts
 	return statefulSet
 }
 
-func (r *ClusterReconciler) initialCluster(kmc *km.Cluster, replicas int32) string {
+func initialCluster(kmc *km.Cluster, replicas int32) string {
 	var members []string
 	stsName := kmc.GetEtcdStatefulSetName()
 	svcName := kmc.GetEtcdServiceName()
@@ -403,7 +403,7 @@ func (r *ClusterReconciler) initialCluster(kmc *km.Cluster, replicas int32) stri
 	return strings.Join(members, ",")
 }
 
-func (r *ClusterReconciler) generateEtcdInitContainers(kmc *km.Cluster, existingSts *apps.StatefulSet) []v1.Container {
+func generateEtcdInitContainers(kmc *km.Cluster, existingSts *apps.StatefulSet) []v1.Container {
 	checkImage := kmc.Spec.GetImage()
 	if existingSts != nil {
 		for _, c := range existingSts.Spec.Template.Spec.InitContainers {

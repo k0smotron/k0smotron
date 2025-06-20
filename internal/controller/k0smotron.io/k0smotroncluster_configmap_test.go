@@ -24,12 +24,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestGenerateCM(t *testing.T) {
-	r := ClusterReconciler{
-		Scheme: &runtime.Scheme{},
+	c, err := client.New(&rest.Config{}, client.Options{})
+	require.NoError(t, err)
+
+	scope := &kmcScope{
+		client: c,
 	}
 	t.Run("config merge", func(t *testing.T) {
 		kmc := km.Cluster{
@@ -47,7 +51,7 @@ func TestGenerateCM(t *testing.T) {
 			},
 		}
 
-		cm, _, err := r.generateConfig(&kmc, []string{})
+		cm, _, err := scope.generateConfig(&kmc, []string{})
 		require.NoError(t, err)
 
 		conf := cm.Data["K0SMOTRON_K0S_YAML"]
@@ -75,7 +79,7 @@ func TestGenerateCM(t *testing.T) {
 
 		sans := []string{"1.2.3.4", "my.san.address2"}
 
-		cm, _, err := r.generateConfig(&kmc, sans)
+		cm, _, err := scope.generateConfig(&kmc, sans)
 		require.NoError(t, err)
 
 		conf := cm.Data["K0SMOTRON_K0S_YAML"]

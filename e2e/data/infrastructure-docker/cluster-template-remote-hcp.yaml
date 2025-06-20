@@ -1,0 +1,63 @@
+# This cluster template is used when a cluster needs to be deployed along a MHC.
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: ${CLUSTER_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    serviceDomain: cluster.local
+    services:
+      cidrBlocks:
+      - 10.128.0.0/12
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: K0smotronControlPlane
+    name: ${CLUSTER_NAME}-docker-test
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: DockerCluster
+    name: docker-test
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: K0smotronControlPlane
+metadata:
+  name: ${CLUSTER_NAME}-docker-test
+  namespace: ${NAMESPACE}
+spec:
+  hostingClusterKubeconfigRef:
+    name: hosting-cluster-kubeconfig
+    namespace: ${NAMESPACE}
+    key: value
+  replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+  version: v1.30.1-k0s.0
+  service:
+    type: NodePort
+
+  k0sConfig:
+    apiVersion: k0s.k0sproject.io/v1beta1
+    kind: ClusterConfig
+    spec:
+      telemetry:
+        enabled: false
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: DockerCluster
+metadata:
+  name: docker-test
+  namespace: ${NAMESPACE}
+  annotations:
+    cluster.x-k8s.io/managed-by: k0smotron # This marks the base infra to be self managed. The value of the annotation is irrelevant, as long as there is a value.
+spec: {}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hosting-cluster-kubeconfig
+  namespace: ${NAMESPACE}
+type: Opaque
+data:
+  value: ${HOSTING_CLUSTER_KUBECONFIG}

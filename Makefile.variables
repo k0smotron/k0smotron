@@ -10,3 +10,4 @@ e2esuite := \
     workload-cluster-recreate-upgrade \
     admission-webhook-t1 \
     admission-webhook-t2 \
+    remote-hosted-control-planes \
