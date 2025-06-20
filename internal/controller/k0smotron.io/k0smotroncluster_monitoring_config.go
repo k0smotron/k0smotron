@@ -36,7 +36,7 @@ func init() {
 	prometheusConfigTmpl = template.Must(template.New("prometheus.yml").Parse(prometheusConfigTemplate))
 }
 
-func (r *ClusterReconciler) generateMonitoringCM(kmc *km.Cluster) (v1.ConfigMap, error) {
+func (scope *kmcScope) generateMonitoringCM(kmc *km.Cluster) (v1.ConfigMap, error) {
 	var entrypointBuf bytes.Buffer
 	err := prometheusConfigTmpl.Execute(&entrypointBuf, struct {
 		Kmc         *km.Cluster
@@ -66,20 +66,20 @@ func (r *ClusterReconciler) generateMonitoringCM(kmc *km.Cluster) (v1.ConfigMap,
 		},
 	}
 
-	_ = ctrl.SetControllerReference(kmc, &cm, r.Scheme)
+	_ = ctrl.SetControllerReference(kmc, &cm, scope.client.Scheme())
 	return cm, nil
 }
 
-func (r *ClusterReconciler) reconcileMonitoringCM(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileMonitoringCM(ctx context.Context, kmc *km.Cluster) error {
 	logger := log.FromContext(ctx)
 	logger.Info("Reconciling monitoring configmap")
 
-	cm, err := r.generateMonitoringCM(kmc)
+	cm, err := scope.generateMonitoringCM(kmc)
 	if err != nil {
 		return err
 	}
 
-	return r.Client.Patch(ctx, &cm, client.Apply, patchOpts...)
+	return scope.client.Patch(ctx, &cm, client.Apply, patchOpts...)
 }
 
 const prometheusConfigTemplate = `

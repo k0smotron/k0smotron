@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (r *ClusterReconciler) generateService(kmc *km.Cluster) v1.Service {
+func generateService(kmc *km.Cluster) v1.Service {
 	var name string
 	ports := []v1.ServicePort{}
 	switch kmc.Spec.Service.Type {
@@ -131,22 +131,22 @@ func (r *ClusterReconciler) generateService(kmc *km.Cluster) v1.Service {
 	return svc
 }
 
-func (r *ClusterReconciler) reconcileServices(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileServices(ctx context.Context, kmc *km.Cluster) error {
 	logger := log.FromContext(ctx)
 	// Depending on ingress configuration create nodePort service.
 	logger.Info("Reconciling services")
-	svc := r.generateService(kmc)
+	svc := generateService(kmc)
 
-	_ = ctrl.SetControllerReference(kmc, &svc, r.Scheme)
+	_ = ctrl.SetControllerReference(kmc, &svc, scope.client.Scheme())
 
-	if err := r.Client.Patch(ctx, &svc, client.Apply, patchOpts...); err != nil {
+	if err := scope.client.Patch(ctx, &svc, client.Apply, patchOpts...); err != nil {
 		return err
 	}
 	// Wait for LB address to be available
 	logger.Info("Waiting for loadbalancer address")
 	if kmc.Spec.Service.Type == v1.ServiceTypeLoadBalancer && kmc.Spec.ExternalAddress == "" {
 		err := wait.PollUntilContextTimeout(ctx, 1*time.Second, 2*time.Minute, true, func(ctx context.Context) (bool, error) {
-			err := r.Client.Get(ctx, client.ObjectKey{Name: svc.Name, Namespace: svc.Namespace}, &svc)
+			err := scope.client.Get(ctx, client.ObjectKey{Name: svc.Name, Namespace: svc.Namespace}, &svc)
 			if err != nil {
 				return false, err
 			}
@@ -159,7 +159,7 @@ func (r *ClusterReconciler) reconcileServices(ctx context.Context, kmc *km.Clust
 				}
 				logger.Info("Loadbalancer address available, updating Cluster object", "address", kmc.Spec.ExternalAddress)
 
-				err := r.Client.Update(ctx, kmc)
+				err := scope.client.Update(ctx, kmc)
 				if err != nil {
 					return false, err
 				}
@@ -173,7 +173,8 @@ func (r *ClusterReconciler) reconcileServices(ctx context.Context, kmc *km.Clust
 	} else if kmc.Spec.Service.Type == v1.ServiceTypeNodePort && kmc.Spec.ExternalAddress == "" {
 		logger.Info("finding nodeport address")
 		// Get a random node address as external address
-		nodes, err := r.ClientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+		nodes := &v1.NodeList{}
+		err := scope.client.List(ctx, nodes)
 		if err != nil {
 			return err
 		}

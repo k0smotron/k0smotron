@@ -47,10 +47,12 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cpv1beta1 "github.com/k0sproject/k0smotron/api/controlplane/v1beta1"
 	kapi "github.com/k0sproject/k0smotron/api/k0smotron.io/v1beta1"
+	"github.com/k0sproject/k0smotron/internal/controller/util"
 	"github.com/k0sproject/k0smotron/internal/exec"
 	"github.com/k0sproject/version"
 )
@@ -77,6 +79,21 @@ type Scope struct {
 	Cluster *clusterv1.Cluster
 }
 
+type kmcScope struct {
+	// isClusterHCP indicates if the controlplane replicas run in the mothership cluster or in a different cluster
+	// (determined by the ClusterProfileRef).
+	// If 'true', the controlplane replicas run in the mothership cluster
+	inClusterHCP bool
+	// client is the client used to interact with the cluster where the controlplane replicas run.
+	client client.Client
+	// clientSet is the clientset used to interact with the cluster where the controlplane replicas run.
+	clientSet *kubernetes.Clientset
+	// restConfig is the rest.Config used to interact with the cluster where the controlplane replicas run.
+	restConfig *rest.Config
+
+	secretCachingClient client.Client
+}
+
 // +kubebuilder:rbac:groups=controlplane.cluster.x-k8s.io,resources=k0smotroncontrolplanes/status,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=controlplane.cluster.x-k8s.io,resources=k0smotroncontrolplanes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -95,9 +112,8 @@ func (c *K0smotronController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	if !kcp.ObjectMeta.DeletionTimestamp.IsZero() {
-		log.Info("K0smotronControlPlane is being deleted, no action needed")
-		return ctrl.Result{}, nil
+	if finalizerAdded, err := util.EnsureFinalizer(ctx, c.Client, kcp, cpv1beta1.K0smotronControlPlaneFinalizer); err != nil || finalizerAdded {
+		return ctrl.Result{}, err
 	}
 
 	cluster, err := capiutil.GetOwnerCluster(ctx, c.Client, kcp.ObjectMeta)
@@ -129,8 +145,14 @@ func (c *K0smotronController) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
+	kmcScope, err := c.getKmcScope(ctx, kcp)
+	if err != nil {
+		log.Error(err, "Error getting kmc scope")
+		return ctrl.Result{}, err
+	}
+
 	defer func() {
-		derr := c.computeStatus(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, kcp)
+		derr := c.computeStatus(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, kcp, kmcScope)
 		if derr != nil {
 			if errors.Is(derr, ErrNotReady) {
 				res = ctrl.Result{RequeueAfter: 10 * time.Second, Requeue: true}
@@ -166,7 +188,16 @@ func (c *K0smotronController) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}()
 
-	res, ready, err := c.reconcile(ctx, cluster, kcp)
+	if !kcp.ObjectMeta.DeletionTimestamp.IsZero() {
+		log.Info("Reconcile K0smotronControlPlane deletion")
+		if !kmcScope.inClusterHCP {
+			return c.reconcileDelete(ctx, types.NamespacedName{Name: cluster.Name, Namespace: cluster.Namespace}, kcp)
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	res, ready, err := c.reconcile(ctx, cluster, kcp, kmcScope)
 	if err != nil {
 		log.Error(err, "Reconciliation failed")
 		return res, err
@@ -270,7 +301,7 @@ func (c *K0smotronController) waitExternalAddress(ctx context.Context, cluster *
 	return nil
 }
 
-func (c *K0smotronController) reconcile(ctx context.Context, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0smotronControlPlane) (ctrl.Result, bool, error) {
+func (c *K0smotronController) reconcile(ctx context.Context, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0smotronControlPlane, scope *kmcScope) (ctrl.Result, bool, error) {
 	logger := log.FromContext(ctx)
 	if kcp.Spec.CertificateRefs == nil {
 		kcp.Spec.CertificateRefs = []kapi.CertificateRef{
@@ -292,8 +323,8 @@ func (c *K0smotronController) reconcile(ctx context.Context, cluster *clusterv1.
 			},
 		}
 
-		if err := c.ensureCertificates(ctx, cluster, kcp); err != nil {
-			return ctrl.Result{}, false, fmt.Errorf("failed to ensure certificates for K0smotronControlPlane %s/%s", kcp.Namespace, kcp.Name)
+		if err := ensureCertificates(ctx, cluster, kcp, scope); err != nil {
+			return ctrl.Result{}, false, fmt.Errorf("failed to ensure certificates for K0smotronControlPlane %s/%s: %w", kcp.Namespace, kcp.Name, err)
 		}
 	}
 
@@ -389,12 +420,12 @@ func isClusterSpecSynced(kmcSpec, kcpSpec kapi.ClusterSpec) (bool, error) {
 	return reflect.DeepEqual(kmcSpec, *overridenKmcSpec), nil
 }
 
-func (c *K0smotronController) ensureCertificates(ctx context.Context, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0smotronControlPlane) error {
+func ensureCertificates(ctx context.Context, cluster *clusterv1.Cluster, kcp *cpv1beta1.K0smotronControlPlane, scope *kmcScope) error {
 	certificates := secret.NewCertificatesForInitialControlPlane(&bootstrapv1.ClusterConfiguration{})
-	return certificates.LookupOrGenerateCached(ctx, c.SecretCachingClient, c.Client, capiutil.ObjectKey(cluster), *metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0smotronControlPlane")))
+	return certificates.LookupOrGenerateCached(ctx, scope.secretCachingClient, scope.client, capiutil.ObjectKey(cluster), *metav1.NewControllerRef(kcp, cpv1beta1.GroupVersion.WithKind("K0smotronControlPlane")))
 }
 
-func (c *K0smotronController) computeStatus(ctx context.Context, cluster types.NamespacedName, kcp *cpv1beta1.K0smotronControlPlane) error {
+func (c *K0smotronController) computeStatus(ctx context.Context, cluster types.NamespacedName, kcp *cpv1beta1.K0smotronControlPlane, scope *kmcScope) error {
 	var kmc kapi.Cluster
 	err := c.Client.Get(ctx, cluster, &kmc)
 	if err != nil {
@@ -413,7 +444,7 @@ func (c *K0smotronController) computeStatus(ctx context.Context, cluster types.N
 			"cluster.x-k8s.io/control-plane": "true",
 		}),
 	}
-	err = c.List(ctx, contolPlanePods, opts)
+	err = scope.client.List(ctx, contolPlanePods, opts)
 	if err != nil {
 		return err
 	}
@@ -449,7 +480,7 @@ func (c *K0smotronController) computeStatus(ctx context.Context, cluster types.N
 			continue
 		}
 
-		currentVersion, err := c.getComparableK0sVersionRunningInPod(ctx, &pod)
+		currentVersion, err := scope.getComparableK0sVersionRunningInPod(ctx, &pod)
 		if err != nil {
 			return err
 		}
@@ -480,8 +511,8 @@ func (c *K0smotronController) computeStatus(ctx context.Context, cluster types.N
 	return nil
 }
 
-func (c *K0smotronController) getComparableK0sVersionRunningInPod(ctx context.Context, pod *corev1.Pod) (*version.Version, error) {
-	currentVersionOutput, err := exec.PodExecCmdOutput(ctx, c.ClientSet, c.RESTConfig, pod.GetName(), pod.GetNamespace(), "k0s version")
+func (scope *kmcScope) getComparableK0sVersionRunningInPod(ctx context.Context, pod *corev1.Pod) (*version.Version, error) {
+	currentVersionOutput, err := exec.PodExecCmdOutput(ctx, scope.clientSet, scope.restConfig, pod.GetName(), pod.GetNamespace(), "k0s version")
 	if err != nil {
 		return nil, err
 	}
@@ -547,6 +578,58 @@ func (c *K0smotronController) patchInfrastructureStatus(ctx context.Context, clu
 	}
 
 	return nil
+}
+
+// reconcileDelete handles the deletion of the K0smotronControlPlane object when the controlplane replicas runs in a different cluster.
+func (c *K0smotronController) reconcileDelete(ctx context.Context, key types.NamespacedName, kcp *cpv1beta1.K0smotronControlPlane) (res ctrl.Result, err error) {
+
+	defer func() {
+		if err != nil && apierrors.IsNotFound(err) {
+			// The cluster is already deleted. Remove the finalizer from the K0smotronControlPlane object for complete cleanup.
+			controllerutil.RemoveFinalizer(kcp, cpv1beta1.K0smotronControlPlaneFinalizer)
+			err = nil
+		}
+	}()
+
+	kmc := &kapi.Cluster{}
+	err = c.Client.Get(ctx, key, kmc)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if !kmc.GetDeletionTimestamp().IsZero() {
+		// Requeue the reconciliation to wait for the complete deletion of the k0smotron Cluster meaning all dependent resources are deleted.
+		return ctrl.Result{Requeue: true, RequeueAfter: 5 * time.Second}, nil
+	}
+
+	if err := c.Client.Delete(ctx, kmc); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (c *K0smotronController) getKmcScope(ctx context.Context, kcp *cpv1beta1.K0smotronControlPlane) (*kmcScope, error) {
+	logger := log.FromContext(ctx)
+
+	// By default, the controlplane replicas run in the mothership cluster so we set the
+	// clients using the controller's clients.
+	kmcScope := &kmcScope{
+		client:     c.Client,
+		clientSet:  c.ClientSet,
+		restConfig: c.RESTConfig,
+	}
+
+	if kcp.Spec.HostingClusterKubeconfigRef != nil {
+		var err error
+		kmcScope.client, kmcScope.clientSet, kmcScope.restConfig, err = util.GetKmcClientFromClusterPrLubeconfigSecret(ctx, c.Client, kcp.Spec.HostingClusterKubeconfigRef)
+		if err != nil {
+			logger.Error(err, "Error getting client from cluster profile")
+			return nil, err
+		}
+	}
+
+	return kmcScope, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

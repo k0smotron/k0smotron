@@ -116,8 +116,7 @@ func TestClusterReconciler_serviceLabels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &ClusterReconciler{}
-			svc := r.generateService(tt.kmc)
+			svc := generateService(tt.kmc)
 			got := svc.Labels
 			assert.Equal(t, tt.want, got)
 		})
@@ -201,8 +200,7 @@ func TestClusterReconciler_serviceAnnotations(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &ClusterReconciler{}
-			svc := r.generateService(tt.kmc)
+			svc := generateService(tt.kmc)
 			got := svc.Annotations
 			assert.Equal(t, tt.want, got)
 		})
@@ -258,8 +256,7 @@ func TestClusterReconciler_serviceLoadBalancerClass(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &ClusterReconciler{}
-			svc := r.generateService(tt.kmc)
+			svc := generateService(tt.kmc)
 			got := svc.Spec.LoadBalancerClass
 			assert.Equal(t, tt.want, got)
 		})

@@ -37,11 +37,11 @@ func init() {
 	entrypointTmpl = template.Must(template.New("entrypoint.sh").Parse(entrypointTemplate))
 }
 
-func (r *ClusterReconciler) generateEntrypointCM(kmc *km.Cluster) (v1.ConfigMap, error) {
+func (scope *kmcScope) generateEntrypointCM(kmc *km.Cluster) (v1.ConfigMap, error) {
 	var entrypointBuf bytes.Buffer
 	err := entrypointTmpl.Execute(&entrypointBuf, map[string]interface{}{
 		"KineDataSourceURLPlaceholder": kineDataSourceURLPlaceholder,
-		"K0sControllerArgs":            r.getControllerFlags(kmc),
+		"K0sControllerArgs":            getControllerFlags(kmc),
 		"PrivilegedPortIsUsed":         kmc.Spec.Service.APIPort <= 1024,
 	})
 	if err != nil {
@@ -64,23 +64,23 @@ func (r *ClusterReconciler) generateEntrypointCM(kmc *km.Cluster) (v1.ConfigMap,
 		},
 	}
 
-	_ = ctrl.SetControllerReference(kmc, &cm, r.Scheme)
+	_ = ctrl.SetControllerReference(kmc, &cm, scope.client.Scheme())
 	return cm, nil
 }
 
-func (r *ClusterReconciler) reconcileEntrypointCM(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) reconcileEntrypointCM(ctx context.Context, kmc *km.Cluster) error {
 	logger := log.FromContext(ctx)
 	logger.Info("Reconciling entrypoint configmap")
 
-	cm, err := r.generateEntrypointCM(kmc)
+	cm, err := scope.generateEntrypointCM(kmc)
 	if err != nil {
 		return err
 	}
 
-	return r.Client.Patch(ctx, &cm, client.Apply, patchOpts...)
+	return scope.client.Patch(ctx, &cm, client.Apply, patchOpts...)
 }
 
-func (r *ClusterReconciler) getControllerFlags(kmc *km.Cluster) string {
+func getControllerFlags(kmc *km.Cluster) string {
 	overrideConfig := false
 	overrideDynamicCfg := false
 	flags := kmc.Spec.ControlPlaneFlags

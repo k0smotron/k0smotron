@@ -36,9 +36,9 @@ import (
 	km "github.com/k0sproject/k0smotron/api/k0smotron.io/v1beta1"
 )
 
-func (r *ClusterReconciler) ensureEtcdCertificates(ctx context.Context, kmc *km.Cluster) error {
+func (scope *kmcScope) ensureEtcdCertificates(ctx context.Context, kmc *km.Cluster) error {
 	certificates := secret.NewCertificatesForInitialControlPlane(&bootstrapv1.ClusterConfiguration{})
-	err := certificates.LookupCached(ctx, r.SecretCachingClient, r.Client, util.ObjectKey(kmc))
+	err := certificates.LookupCached(ctx, scope.secretCachingClient, scope.client, util.ObjectKey(kmc))
 	if err != nil {
 		return fmt.Errorf("error looking up etcd certs: %w", err)
 	}
@@ -70,7 +70,7 @@ func (r *ClusterReconciler) ensureEtcdCertificates(ctx context.Context, kmc *km.
 		&secret.Certificate{Purpose: "etcd-peer"},
 	}
 
-	err = etcdCerts.LookupCached(ctx, r.SecretCachingClient, r.Client, util.ObjectKey(kmc))
+	err = etcdCerts.LookupCached(ctx, scope.secretCachingClient, scope.client, util.ObjectKey(kmc))
 	if err != nil {
 		return fmt.Errorf("error looking up etcd certs: %w", err)
 	}
@@ -114,5 +114,5 @@ func (r *ClusterReconciler) ensureEtcdCertificates(ctx context.Context, kmc *km.
 		}
 	}
 
-	return etcdCerts.SaveGenerated(ctx, r.Client, util.ObjectKey(kmc), *metav1.NewControllerRef(kmc, km.GroupVersion.WithKind("Cluster")))
+	return etcdCerts.SaveGenerated(ctx, scope.client, util.ObjectKey(kmc), *metav1.NewControllerRef(kmc, km.GroupVersion.WithKind("Cluster")))
 }
